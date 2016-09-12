@@ -46,6 +46,4 @@ Run
 in the directory you wish to run the program. See the top section for more info.
 
 #### Windows installation
-I have not currently tried out the program on windows, I will get round to it. I see no reason why it shouldn't work, but if you're getting an error please open up an issue and I'll see if I can solve it.
-
-I'm not sure how well cmd respects getting the current working directory, so I wouldn't be surprised if images get downloaded somewhere weird.
+The setup is the same on windows, I have tried it using a cywgin terminal and it works fine, I have not tried using windows cmd, but I have no reason to believe it would be any different.
