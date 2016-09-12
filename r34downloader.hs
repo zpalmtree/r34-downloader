@@ -1,3 +1,13 @@
+{-# OPTIONS_GHC -O2
+    -rtsopts
+    -Wall
+    -fno-warn-unused-do-bind
+    -fno-warn-type-defaults
+    -fexcess-precision
+    -optc-O3
+    -optc-ffast-math
+    -fforce-recomp #-}
+
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest, getResponseBody, defaultGETRequest_)
 import Network.URI (parseURI)
 import Text.HTML.TagSoup
@@ -10,14 +20,15 @@ import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.Environment (getArgs)
 import System.IO (hFlush, stdout)
+import Control.Concurrent.Async (async, wait)
 
 {-
 This program is a tool to quickly rip all the images from a given tag on
 rule34.paheal. It is not super fast due to the website limiting requests to one
 per second. Use the --help or -h flag for help.
 -}
---TODO - Add async IO
 --TODO - Add functionality to take the first n links or the last n links
+--TODO - Handle not a valid url cleaner - raise exception informing user of tag convention
 main :: IO ()
 main = do
     args <- getArgs
@@ -34,7 +45,7 @@ main = do
     let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum firstpage
         urls = allUrls url lastpage
     links <- getLinks urls []
-    mapM_ (niceDownload cwd) links
+    niceDownload cwd links
 
 {-
 Open a url and download the content
@@ -134,11 +145,13 @@ getLinks (x:xs) acc = do
 {-
 Add a delay to our download to not get rate limited
 -}
-niceDownload :: FilePath -> String -> IO ()
-niceDownload dir url = do
-    delay 1000000 --maybe we can decrease this - limit might just be for
-                  --directly downloading webpages?
-    downloadImage dir url
+niceDownload :: FilePath -> [String] -> IO ()
+niceDownload _ [] = return ()
+niceDownload dir (link:links) = do
+    img <- async $ downloadImage dir link
+    delay 1000000
+    niceDownload dir links
+    wait img
 
 {-
 Get the url if it was supplied as an argument, otherwise ask for it.
