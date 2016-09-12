@@ -29,7 +29,7 @@ rule34.paheal. It is not super fast due to the website limiting requests to one
 per second. Use the --help or -h flag for help.
 -}
 --TODO - Add functionality to take the first n links or the last n links
---TODO - Handle not a valid url cleaner - raise exception informing user of tag convention
+--TODO - Add specifying directory support
 main :: IO ()
 main = do
     args <- getArgs
