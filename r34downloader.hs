@@ -11,9 +11,9 @@
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest, getResponseBody, defaultGETRequest_)
 import Network.URI (parseURI)
 import Text.HTML.TagSoup
-import Data.List (isSuffixOf, intercalate)
+import Data.List (isSuffixOf, intercalate, elemIndex)
 import qualified Data.ByteString as B (writeFile)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust, isJust, mapMaybe)
 import System.Directory (getCurrentDirectory)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
@@ -22,19 +22,19 @@ import System.Environment (getArgs)
 import System.IO (hFlush, stdout)
 import Control.Concurrent.Async (async, wait)
 import Control.Exception (try, SomeException)
+import Text.Read (readMaybe)
 
 {-
 This program is a tool to quickly rip all the images from a given tag on
 rule34.paheal. It is not super fast due to the website limiting requests to one
 per second. Use the --help or -h flag for help.
 -}
---TODO - Add functionality to take the first n links or the last n links
 --TODO - Add specifying directory support
+--TODO - Make urls a type 
 main :: IO ()
 main = do
     args <- getArgs
-    --if invalid arg length, or help flag, prompt help message
-    if (not (null args) && length args < 2) || any (`elem` ["--help","-h"]) args
+    if any (`elem` ["--help","-h"]) args
         then help
         else do
     url <- askUrl
@@ -47,7 +47,7 @@ main = do
             else do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
             urls = allUrls url lastpage
-        links <- getLinks urls []
+        links <- takeNLinks $ getLinks urls []
         niceDownload cwd links
 
 {-
@@ -164,8 +164,10 @@ greater in length or 0, thus we can't find -t without an input
 askUrl :: IO String
 askUrl = do
     args <- getArgs
-    if any (`elem` ["--tag","-t"]) args
-        then return (addBaseAddress $ args !! 1)
+    let flags = ["--tag","-t"]
+        index = getElemIndex args flags
+    if any (`elem` flags) args && (length args > index)
+        then return (addBaseAddress $ args !! index)
         else promptTag
 
 {-
@@ -175,13 +177,15 @@ is encountered in the argument list
 help :: IO ()
 help = putStrLn message
     where message = intercalate "\n" ["This program downloads images of a given \
-            \tag from http://rule34.paheal.net.","Either enter the tag you wish \
+            \tag from http://rule34.paheal.net.","","Either enter the tag you wish \
             \to download with the flag -t or --tag and then the tag.","Please note \
             \that the tag must not have spaces in to allow the website to query \
-            \correctly.","Please use underscores instead.","For example, the WRONG \
+            \correctly.","Please use underscores instead.","","For example, the WRONG \
             \way to do it is ./r34downloader -t \"Cute anime girl\".","The CORRECT way \
-            \is ./r34downloader -t \"Cute_anime_girl."]
-
+            \is ./r34downloader -t \"Cute_anime_girl\".","","If you only want to download \
+            \the first n images, use the -f or --first flag.","Example: ./r34downloader \
+            \--tag \"Cute_anime_girl\" --first 10","This will take the first 10 images \
+            \from the tag Cute_anime_girl if 10 exist."]
 
 {-
 Prompt the user for a tag to search for
@@ -222,3 +226,26 @@ invalidURL = do
     putStrLn "Sorry, that URL wasn't valid! Make sure you didn't include \
                 \spaces in your tags."
     putStrLn "Use the --help flag for more info."
+
+takeNLinks :: IO [String] -> IO [String]
+takeNLinks links = do
+    args <- getArgs
+    let flags = ["-f", "--first"]
+        index = getElemIndex args flags
+    if any (`elem` flags) args
+        then do
+            let n = getN args index
+            if isJust n then take (abs (fromJust n)) <$> links else links
+        else links
+
+{-
+Gets the index of the value after the tag
+-}
+getElemIndex :: [String] -> [String] -> Int
+getElemIndex args flags = 1 + head (mapMaybe (`elemIndex` args) flags)
+
+getN :: [String] -> Int -> Maybe Int
+getN args index
+    | length args > index && isJust num = num
+    | otherwise = Nothing
+    where num = readMaybe $ args !! index
