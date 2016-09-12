@@ -12,7 +12,9 @@ Example: ./rule34downloader --tag "cute_anime_girl"
 
 The -h or --help flag is also supported, if you're having problems.
 
-It's not very fast currently due to the website enforcing a one second per request rule. I will be adding async IO to speed this up a little.
+Unfortunately the website only lets us make a request once a second so that's the reason you aren't maxing out your bandwidth.
+
+The program does support async IO, so a slow network connection will not effect the speed as much, we send a request roughly every second.
 
 ## Installation:
 
@@ -25,7 +27,7 @@ This should be installed from your repositories if available.
 
 `cabal install concurrent-extra tagsoup http`
 
-Note that cabal is a bit finnicky, if it fails on any of the above modules, try running cabal install failed_module on its own, so if tagsoup failed to install, rerun
+Note that cabal is a bit finnicky, if it fails on any of the above modules, try running cabal install failed_module on its own, so if tagsoup for example failed to install, rerun
 
 `cabal install tagsoup`
 
