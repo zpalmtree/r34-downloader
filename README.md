@@ -3,24 +3,42 @@ A program to download all the images of a given tag from https://rule34.paheal.n
 
 To use, place the program in the folder which you wish to download images to, and invoke the program.
 
-I will hopefully later add support for specifying a directory to download to.
-
 If you don't provide any command line arguments the program will then prompt you for a tag to download from.
-Tags must not have spaces in, instead they should have underscores. You can specify a tag on the command line using -t or --tag.
-
-Example: ./r34downloader --tag "cute_anime_girl"
-
-If you want to only take the first n images, use the -f or --first flag.
-
-Example: ./r34downloader --tag "cute_anime_girl" --first 10
-
-This will take the first 10 images from the tag cute_anime_girl, if 10 exist
-
-The -h or --help flag is also supported, if you're having problems.
 
 Unfortunately the website only lets us make a request once a second so that's the reason you aren't maxing out your bandwidth.
 
 The program does support async IO, so a slow network connection will not effect the speed as much, we send a request roughly every second.
+
+## Flags:
+
+#### -t / --tag
+Specify a tag to download on the command line. You must use underscores instead of spaces.
+
+Usage: `./r34downloader --tag "cute_anime_girl"`
+
+This will download all images with the tag cute_anime_girl.
+
+#### -f / --first
+Specify the amount of images to download. Input should be a positive number.
+
+Usage: `./r34download --t "cute_anime_girl" --first 10`
+
+This will download the first 10 images from the tag cute_anime_girl, if it exists.
+
+#### -h / --help
+Prints a help message.
+
+Usage: `./r34download --help`
+
+This will output help on how to use the program.
+
+#### -d / --directory
+Lets you select the directory to download the images to. The directory must exist.
+If the directory does not exist, the program will fall back to the current working directory.
+
+Usage: `./r34downloader --t "cute_anime_girl" --directory "/media/Pictures"`
+
+This will download all images with the tag cute_anime_girl to the directory /media/Pictures, if it exists.
 
 ## Installation:
 
@@ -49,7 +67,7 @@ Run
 
 `./r34downloader`
 
-in the directory you wish to run the program. See the top section for more info.
+in the directory you wish to run the program. See the flags section to customize how you use the program.
 
 #### Windows installation
 The setup is the same on windows, I have tried it using a cywgin terminal and it works fine, I have not tried using windows cmd, but I have no reason to believe it would be any different.
