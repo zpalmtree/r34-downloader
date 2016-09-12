@@ -30,7 +30,8 @@ rule34.paheal. It is not super fast due to the website limiting requests to one
 per second. Use the --help or -h flag for help.
 -}
 --TODO - Add specifying directory support
---TODO - Make urls a type 
+--TODO - Clean up main
+--TODO - Make link download async
 main :: IO ()
 main = do
     args <- getArgs
@@ -50,10 +51,12 @@ main = do
         links <- takeNLinks $ getLinks urls []
         niceDownload cwd links
 
+type URL = String
+
 {-
 Open a url and download the content
 -}
-openURL :: String -> IO String
+openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
 
 {-
@@ -96,7 +99,7 @@ filetypes = [".jpg", ".png", ".gif"]
 From https://stackoverflow.com/questions/11514671/
      haskell-network-http-incorrectly-downloading-image/11514868
 -}
-downloadImage :: FilePath -> String -> IO ()
+downloadImage :: FilePath -> URL -> IO ()
 downloadImage directory url = do
     image <- get
     putStrLn $ "Downloading " ++ url
@@ -129,14 +132,14 @@ getPageNum xs
 {-
 Gets all the urls so we can download the pics from them
 -}
-allUrls :: String -> Int -> [String]
+allUrls :: URL -> Int -> [URL]
 allUrls url lastpage = map (f (init url)) [1..lastpage]
     where f xs n = xs ++ show n
 
 {-
 Gets all the image links so we can download them
 -}
-getLinks :: [String] -> [String] -> IO [String]
+getLinks :: [URL] -> [URL] -> IO [URL]
 getLinks [] acc = return acc
 getLinks (x:xs) acc = do
     input <- openURL x 
@@ -148,7 +151,7 @@ getLinks (x:xs) acc = do
 {-
 Add a delay to our download to not get rate limited
 -}
-niceDownload :: FilePath -> [String] -> IO ()
+niceDownload :: FilePath -> [URL] -> IO ()
 niceDownload _ [] = return ()
 niceDownload dir (link:links) = do
     img <- async $ downloadImage dir link
@@ -161,7 +164,7 @@ Get the url if it was supplied as an argument, otherwise ask for it.
 Won't error on args !! 1 because we already checked that the input is 2 or
 greater in length or 0, thus we can't find -t without an input
 -}
-askUrl :: IO String
+askUrl :: IO URL
 askUrl = do
     args <- getArgs
     let flags = ["--tag","-t"]
@@ -201,7 +204,7 @@ promptTag = do
 {-
 Add base address onto user tag
 -}
-addBaseAddress :: String -> String
+addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
 {-
@@ -227,7 +230,10 @@ invalidURL = do
                 \spaces in your tags."
     putStrLn "Use the --help flag for more info."
 
-takeNLinks :: IO [String] -> IO [String]
+{-
+Take only the first n links
+-}
+takeNLinks :: IO [URL] -> IO [URL]
 takeNLinks links = do
     args <- getArgs
     let flags = ["-f", "--first"]
@@ -244,6 +250,9 @@ Gets the index of the value after the tag
 getElemIndex :: [String] -> [String] -> Int
 getElemIndex args flags = 1 + head (mapMaybe (`elemIndex` args) flags)
 
+{-
+Gets the argument at the specified index, if it exists, and is a number
+-}
 getN :: [String] -> Int -> Maybe Int
 getN args index
     | length args > index && isJust num = num
