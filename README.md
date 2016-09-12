@@ -37,3 +37,8 @@ Enter the directory which contains the r34downloader.hs file and run
 `ghc r34downloader.hs`
 
 Note that some intermediate compile files will be left around, r34downloader.hi and r34downloader.o. You can delete these if you wish.
+
+#### Windows installation
+I have not currently tried out the program on windows, I will get round to it. I see no reason why it shouldn't work, but if you're getting an error please open up an issue and I'll see if I can solve it.
+
+I'm not sure how well cmd respects getting the current working directory, so I wouldn't be surprised if images get downloaded somewhere weird.
