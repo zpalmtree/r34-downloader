@@ -25,6 +25,9 @@ This should be installed from your repositories if available.
 
 `cabal install concurrent-extra tagsoup http`
 
+Note that cabal is a bit finnicky, if it fails on any of the above modules, try running cabal install failed_module on it's own, so if tagsoup failed to install, rerun
+`cabal install tagsoup`
+
 #### Compile
 Enter the directory which contains the r34downloader.hs file and run
 
