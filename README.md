@@ -16,16 +16,16 @@ It's not very fast currently due to the website enforcing a one second per reque
 
 ## Installation:
 
-###### Clone the repository
+#### Clone the repository
 `git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
 
-###### Install dependencies
+#### Install dependencies
 You will need a couple of dependencies. Ensure you have the haskell platform including cabal installed.
 This should be installed from your repositories if available. 
 
 `cabal install concurrent-extra tagsoup http`
 
-###### Compile
+#### Compile
 Enter the directory which contains the r34downloader.hs file and run
 
 `ghc r34downloader.hs`
