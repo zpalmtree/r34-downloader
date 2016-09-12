@@ -14,7 +14,7 @@ import Text.HTML.TagSoup
 import Data.List (isSuffixOf, intercalate, elemIndex)
 import qualified Data.ByteString as B (writeFile)
 import Data.Maybe (fromMaybe, fromJust, isJust, mapMaybe)
-import System.Directory (getCurrentDirectory)
+import System.Directory (getCurrentDirectory, doesDirectoryExist)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
@@ -29,7 +29,6 @@ This program is a tool to quickly rip all the images from a given tag on
 rule34.paheal. It is not super fast due to the website limiting requests to one
 per second. Use the --help or -h flag for help.
 -}
---TODO - Add specifying directory support
 --TODO - Clean up main
 --TODO - Make link download async
 main :: IO ()
@@ -39,7 +38,8 @@ main = do
         then help
         else do
     url <- askUrl
-    cwd <- (++ "/") <$> getCurrentDirectory
+    dir <- getDir
+    --cwd <- (++ "/") <$> getCurrentDirectory
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
         Left _ -> invalidURL
@@ -49,7 +49,7 @@ main = do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
             urls = allUrls url lastpage
         links <- takeNLinks $ getLinks urls []
-        niceDownload cwd links
+        niceDownload dir links
 
 type URL = String
 
@@ -188,7 +188,10 @@ help = putStrLn message
             \is ./r34downloader -t \"Cute_anime_girl\".","","If you only want to download \
             \the first n images, use the -f or --first flag.","Example: ./r34downloader \
             \--tag \"Cute_anime_girl\" --first 10","This will take the first 10 images \
-            \from the tag Cute_anime_girl if 10 exist."]
+            \from the tag Cute_anime_girl if 10 exist.","","If you want to download the \
+            \images to somewhere otherwise than the current directory, ", "specify that \
+            \with the -d or --directory flag.","Example: ./r34downloader --t \"Cute\
+            \_anime_girl\" --directory \"/media/Pictures\""]
 
 {-
 Prompt the user for a tag to search for
@@ -258,3 +261,28 @@ getN args index
     | length args > index && isJust num = num
     | otherwise = Nothing
     where num = readMaybe $ args !! index
+
+getDir :: IO FilePath
+getDir = do
+    args <- getArgs
+    cwd <- getCurrentDirectory
+    let flags = ["-d", "--directory"]
+    if any (`elem` flags) args
+        then do
+            let index = getElemIndex args flags
+            if length args > index
+                then do
+                isDir <- isValidPath (args !! index)
+                if isDir
+                    then return (fixPath $ args !! index)
+                    else return (cwd ++ "/")
+            else return (cwd ++ "/")
+        else return (cwd ++ "/")
+
+isValidPath :: FilePath -> IO Bool
+isValidPath = doesDirectoryExist
+
+fixPath :: FilePath -> FilePath
+fixPath path
+    | last path == '/' = path
+    | otherwise = path ++ "/"
