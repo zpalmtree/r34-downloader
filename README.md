@@ -25,7 +25,7 @@ The program does support async IO, so a slow network connection will not effect 
 You will need a couple of dependencies. Ensure you have the haskell platform including cabal installed.
 This should be installed from your repositories if available. 
 
-`cabal install concurrent-extra tagsoup http`
+`cabal install concurrent-extra tagsoup http async`
 
 Note that cabal is a bit finnicky, if it fails on any of the above modules, try running cabal install failed_module on its own, so if tagsoup for example failed to install, rerun
 
