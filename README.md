@@ -71,3 +71,5 @@ in the directory you wish to run the program. See the flags section to customize
 
 #### Windows installation
 The setup is the same on windows, I have tried it using a cywgin terminal and it works fine, I have not tried using windows cmd, but I have no reason to believe it would be any different.
+
+Get the haskell platform here: https://www.haskell.org/platform/#windows
