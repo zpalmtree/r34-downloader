@@ -21,6 +21,7 @@ import Text.Printf (printf)
 import System.Environment (getArgs)
 import System.IO (hFlush, stdout)
 import Control.Concurrent.Async (async, wait)
+import Control.Exception (try, SomeException)
 
 {-
 This program is a tool to quickly rip all the images from a given tag on
@@ -38,14 +39,16 @@ main = do
         else do
     url <- askUrl
     cwd <- (++ "/") <$> getCurrentDirectory
-    firstpage <- openURL url
-    if noImagesExist firstpage
-        then noImages url
-        else do
-    let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum firstpage
-        urls = allUrls url lastpage
-    links <- getLinks urls []
-    niceDownload cwd links
+    firstpage <- try (openURL url) :: IO (Either SomeException String)
+    case firstpage of
+        Left _ -> invalidURL
+        Right val -> if noImagesExist val
+            then noImages url
+            else do
+        let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
+            urls = allUrls url lastpage
+        links <- getLinks urls []
+        niceDownload cwd links
 
 {-
 Open a url and download the content
@@ -213,3 +216,9 @@ noImagesExist page
     | null $ findError $ parseTags page = False
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
+
+invalidURL :: IO ()
+invalidURL = do
+    putStrLn "Sorry, that URL wasn't valid! Make sure you didn't include \
+                \spaces in your tags."
+    putStrLn "Use the --help flag for more info."
