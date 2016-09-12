@@ -10,6 +10,12 @@ Tags must not have spaces in, instead they should have underscores. You can spec
 
 Example: ./rule34downloader --tag "cute_anime_girl"
 
+If you want to only take the first n images, use the -f or --first flag.
+
+Example: ./rule34downloader --tag "cute_anime_girl" --first 10
+
+This will take the first 10 images from the tag cute_anime_girl, if 10 exist
+
 The -h or --help flag is also supported, if you're having problems.
 
 Unfortunately the website only lets us make a request once a second so that's the reason you aren't maxing out your bandwidth.
