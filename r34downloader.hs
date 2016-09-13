@@ -34,11 +34,11 @@ main = do
     args <- getArgs
     url <- askUrl
     dir <- getDir
-    if any (`elem` ["--help","-h"]) args then help else do
+    if any (`elem` ["--help","-h"]) args then putStrLn help else do
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
-        Left _ -> invalidURL
-        Right val -> if noImagesExist val then noImages url else do
+        Left _ -> putStrLn invalidURL
+        Right val -> if noImagesExist val then putStrLn (noImages url) else do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
             urls = allUrls url lastpage
         links <- takeNLinks args <$> getLinks urls
@@ -154,9 +154,8 @@ askUrl = do
         then return (addBaseAddress $ args !! index)
         else promptTag
 
-help :: IO ()
-help = putStrLn message
-    where message = intercalate "\n" ["This program downloads images of a given \
+help :: String
+help = intercalate "\n" ["This program downloads images of a given \
             \tag from http://rule34.paheal.net.","","Either enter the tag you wish \
             \to download with the flag -t or --tag and then the tag.","Please note \
             \that the tag must not have spaces in to allow the website to query \
@@ -181,7 +180,7 @@ promptTag = do
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
-noImages :: URL -> IO ()
+noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly and you used underscores instead of \
             \spaces.\n"
@@ -193,11 +192,9 @@ noImagesExist page
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
-invalidURL :: IO ()
-invalidURL = do
-    putStrLn "Sorry, that URL wasn't valid! Make sure you didn't include \
-                \spaces in your tags."
-    putStrLn "Use the --help flag for more info."
+invalidURL :: String
+invalidURL = "Sorry, that URL wasn't valid! Make sure you didn't include \
+                \spaces in your tags.\nUse the --help flag for more info."
 
 takeNLinks :: [URL] -> [String] -> [URL]
 takeNLinks links args
@@ -232,15 +229,12 @@ getDir = do
             let index = getElemIndex args flags
             if length args > index
                 then do
-                isDir <- isValidPath (args !! index)
+                isDir <- doesDirectoryExist (args !! index)
                 if isDir
                     then return (fixPath $ args !! index)
                     else def
             else def
         else def
-
-isValidPath :: FilePath -> IO Bool
-isValidPath = doesDirectoryExist
 
 fixPath :: FilePath -> FilePath
 fixPath path
