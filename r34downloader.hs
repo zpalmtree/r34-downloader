@@ -23,6 +23,7 @@ import System.IO (hFlush, stdout)
 import Control.Concurrent.Async (async, wait)
 import Control.Exception (try, SomeException)
 import Text.Read (readMaybe)
+import System.FilePath.Posix (addTrailingPathSeparator)
 
 {-
 This program is a tool to quickly rip all the images from a given tag on
@@ -223,7 +224,7 @@ getDir = do
     args <- getArgs
     cwd <- getCurrentDirectory
     let flags = ["-d", "--directory"]
-    let def = return (cwd ++ "/")
+    let def = return (addTrailingPathSeparator cwd)
     if any (`elem` flags) args
         then do
             let index = getElemIndex args flags
@@ -231,11 +232,7 @@ getDir = do
                 then do
                 isDir <- doesDirectoryExist (args !! index)
                 if isDir
-                    then return (fixPath $ args !! index)
+                    then return (addTrailingPathSeparator $ args !! index)
                     else def
             else def
         else def
-
-fixPath :: FilePath -> FilePath
-fixPath xs@(_:"/") = xs
-fixPath xs = xs ++ "/"
