@@ -13,7 +13,7 @@ import Network.URI (parseURI)
 import Text.HTML.TagSoup
 import Data.List (isSuffixOf, intercalate, elemIndex)
 import qualified Data.ByteString as B (writeFile)
-import Data.Maybe (fromMaybe, fromJust, isJust, mapMaybe)
+import Data.Maybe (fromMaybe, isJust, mapMaybe)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
@@ -29,46 +29,33 @@ This program is a tool to quickly rip all the images from a given tag on
 rule34.paheal. It is not super fast due to the website limiting requests to one
 per second. Use the --help or -h flag for help.
 -}
---TODO - Clean up main
---TODO - Make link download async
 main :: IO ()
 main = do
     args <- getArgs
-    if any (`elem` ["--help","-h"]) args
-        then help
-        else do
     url <- askUrl
     dir <- getDir
-    --cwd <- (++ "/") <$> getCurrentDirectory
+    if any (`elem` ["--help","-h"]) args then help else do
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
         Left _ -> invalidURL
-        Right val -> if noImagesExist val
-            then noImages url
-            else do
+        Right val -> if noImagesExist val then noImages url else do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
             urls = allUrls url lastpage
-        links <- takeNLinks $ getLinks urls []
+        links <- takeNLinks args <$> getLinks urls
         niceDownload dir links
 
 type URL = String
 
-{-
-Open a url and download the content
--}
+--Open a url and download the content
 openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
 
-{-
-Gets the data in the url between start and end filtering out lots of crap
--}
+--Gets the data in the url between start and end filtering out lots of crap
 desiredSection :: String -> String -> ([[Attribute String]] -> a) -> String -> a
 desiredSection start end f page = fromMain $ parseTags page
     where fromMain = f . getHyperLinks . takeWhile (~/= end) . dropWhile (~/= start)
 
-{-
-Get the stuff out of a TagOpen
--}
+--Get the stuff out of a TagOpen
 getText :: Tag t -> [Attribute t]
 getText (TagOpen _ stuff) = stuff
 getText _ = error "Only use with a TagOpen"
@@ -86,12 +73,10 @@ then taking the last and head of what we have left. It doesn't actually matter
 if we use head or last as the ones which match the pattern are all singleton
 lists
 -}
-getImageLink :: [[(a, String)]] -> [String]
+getImageLink :: [[(a, String)]] -> [URL]
 getImageLink = map (snd . last) . filter (\x -> any (`isSuffixOf` snd (last x)) filetypes)
 
-{-
-I believe these are the only supported filetypes by paheal
--}
+--I believe these are the only supported filetypes by paheal
 filetypes :: [String]
 filetypes = [".jpg", ".png", ".gif"]
 
@@ -114,43 +99,39 @@ openBinaryFile errors on a filename length over 256. We ensure we retain the
 directory path and the filename. Note that this will probably fail if the dir
 length is over 255. Not sure if filesystems even support that though.
 -}
-name :: FilePath -> String -> String
+name :: FilePath -> URL -> FilePath
 name directory url
     | length xs + len > 255 = directory ++ reverse (take len (reverse xs))
     | otherwise = directory ++ xs
     where xs = reverse . takeWhile (/= '/') $ reverse url
           len = 255 - length directory
 
-{-
-Gets the last page available so we get every link from 1 to last page
--}
+--Gets the last page available so we get every link from 1 to last page
 getPageNum :: [[(a, String)]] -> Int
 getPageNum xs
     | length xs <= 2 = 1 --only one page long - will error on !!
     | otherwise = read $ dropWhile (not . isNumber) $ snd $ last $ xs !! 2
 
-{-
-Gets all the urls so we can download the pics from them
--}
+--Gets all the urls so we can download the pics from them
 allUrls :: URL -> Int -> [URL]
 allUrls url lastpage = map (f (init url)) [1..lastpage]
     where f xs n = xs ++ show n
 
 {-
-Gets all the image links so we can download them
+Gets all the image links so we can download them, once every second so
+website doesn't block us
 -}
-getLinks :: [URL] -> [URL] -> IO [URL]
-getLinks [] acc = return acc
-getLinks (x:xs) acc = do
+getLinks :: [URL] -> IO [URL]
+getLinks [] = return []
+getLinks (x:xs) = do
     input <- openURL x 
+    delay 1000000
     let links = desiredSection "<section id='imagelist'>" "</section" getImageLink input
     printf "%d links added to download...\n" (length links)
-    delay 1000000 --only wants us to scrape once a second :(
-    getLinks xs (links ++ acc)
+    nextlinks <- getLinks xs
+    return (links ++ nextlinks)
 
-{-
-Add a delay to our download to not get rate limited
--}
+--Add a delay to our download to not get rate limited
 niceDownload :: FilePath -> [URL] -> IO ()
 niceDownload _ [] = return ()
 niceDownload dir (link:links) = do
@@ -173,10 +154,6 @@ askUrl = do
         then return (addBaseAddress $ args !! index)
         else promptTag
 
-{-
-Print helpful message if invalid number of arguments or if --help / -h
-is encountered in the argument list
--}
 help :: IO ()
 help = putStrLn message
     where message = intercalate "\n" ["This program downloads images of a given \
@@ -193,9 +170,6 @@ help = putStrLn message
             \with the -d or --directory flag.","Example: ./r34downloader --t \"Cute\
             \_anime_girl\" --directory \"/media/Pictures\""]
 
-{-
-Prompt the user for a tag to search for
--}
 promptTag :: IO String
 promptTag = do
     putStrLn "Enter the tag which you wish to download."
@@ -204,23 +178,15 @@ promptTag = do
     hFlush stdout
     addBaseAddress <$> getLine
 
-{-
-Add base address onto user tag
--}
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
-{-
-Inform the user if no images were found
--}
-noImages :: String -> IO ()
+noImages :: URL -> IO ()
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly and you used underscores instead of \
             \spaces.\n"
 
-{-
-Check that images exist for the specified tag
--}
+--Check that images exist for the specified tag
 noImagesExist :: String -> Bool
 noImagesExist page
     | null $ findError $ parseTags page = False
@@ -233,40 +199,34 @@ invalidURL = do
                 \spaces in your tags."
     putStrLn "Use the --help flag for more info."
 
-{-
-Take only the first n links
--}
-takeNLinks :: IO [URL] -> IO [URL]
-takeNLinks links = do
-    args <- getArgs
-    let flags = ["-f", "--first"]
-        index = getElemIndex args flags
-    if any (`elem` flags) args
-        then do
-            let n = getN args index
-            if isJust n then take (abs (fromJust n)) <$> links else links
-        else links
+takeNLinks :: [URL] -> [String] -> [URL]
+takeNLinks links args
+    | not $ any (`elem` flags) args = links
+    | otherwise = case n of
+                      Just x -> take (abs x) links
+                      Nothing -> links
+    where flags = ["-f", "--first"]
+          index = getElemIndex args flags
+          n = getN args index
 
-{-
-Gets the index of the value after the tag
--}
+--Gets the index of the value after the tag
 getElemIndex :: [String] -> [String] -> Int
 getElemIndex args flags = 1 + head (mapMaybe (`elemIndex` args) flags)
 
-{-
-Gets the argument at the specified index, if it exists, and is a number
--}
+--Gets the argument at the specified index, if it exists, and is a number
 getN :: [String] -> Int -> Maybe Int
 getN args index
     | length args > index && isJust num = num
     | otherwise = Nothing
     where num = readMaybe $ args !! index
 
+--this is pretty awful
 getDir :: IO FilePath
 getDir = do
     args <- getArgs
     cwd <- getCurrentDirectory
     let flags = ["-d", "--directory"]
+    let def = return (cwd ++ "/")
     if any (`elem` flags) args
         then do
             let index = getElemIndex args flags
@@ -275,9 +235,9 @@ getDir = do
                 isDir <- isValidPath (args !! index)
                 if isDir
                     then return (fixPath $ args !! index)
-                    else return (cwd ++ "/")
-            else return (cwd ++ "/")
-        else return (cwd ++ "/")
+                    else def
+            else def
+        else def
 
 isValidPath :: FilePath -> IO Bool
 isValidPath = doesDirectoryExist
