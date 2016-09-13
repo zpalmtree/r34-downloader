@@ -237,6 +237,5 @@ getDir = do
         else def
 
 fixPath :: FilePath -> FilePath
-fixPath path
-    | last path == '/' = path
-    | otherwise = path ++ "/"
+fixPath xs@(_:"/") = xs
+fixPath xs = xs ++ "/"
