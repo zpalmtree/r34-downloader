@@ -88,7 +88,6 @@ From https://stackoverflow.com/questions/11514671/
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage directory url = do
     image <- get
-    putStrLn $ "Downloading " ++ url
     B.writeFile (name directory url) image
     where get = let uri = fromMaybe (error $ "Invalid URI: " ++ url) (parseURI url)
                 in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
@@ -126,9 +125,9 @@ getLinks :: [URL] -> IO [URL]
 getLinks [] = return []
 getLinks (x:xs) = do
     input <- openURL x 
-    delay 1000000
     let links = desiredSection "<section id='imagelist'>" "</section" getImageLink input
     printf "%d links added to download...\n" (length links)
+    delay 1000000
     nextlinks <- getLinks xs
     return (links ++ nextlinks)
 
@@ -137,6 +136,7 @@ niceDownload :: FilePath -> [URL] -> IO ()
 niceDownload _ [] = return ()
 niceDownload dir (link:links) = do
     img <- async $ downloadImage dir link
+    putStrLn $ "Downloading " ++ link
     delay 1000000
     niceDownload dir links
     wait img
@@ -197,8 +197,8 @@ invalidURL :: String
 invalidURL = "Sorry, that URL wasn't valid! Make sure you didn't include \
                 \spaces in your tags.\nUse the --help flag for more info."
 
-takeNLinks :: [URL] -> [String] -> [URL]
-takeNLinks links args
+takeNLinks :: [String] -> [URL] -> [URL]
+takeNLinks args links
     | not $ any (`elem` flags) args = links
     | otherwise = case n of
                       Just x -> take (abs x) links
