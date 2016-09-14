@@ -222,9 +222,9 @@ getN args index
 getDir :: IO FilePath
 getDir = do
     args <- getArgs
-    cwd <- getCurrentDirectory
+    cwd <- addTrailingPathSeparator <$> getCurrentDirectory
     let flags = ["-d", "--directory"]
-    let def = return (addTrailingPathSeparator cwd)
+    let def = return cwd
     if any (`elem` flags) args
         then do
             let index = getElemIndex args flags
