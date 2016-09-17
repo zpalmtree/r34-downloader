@@ -47,16 +47,17 @@ main = do
 
 type URL = String
 
---Open a url and download the content
 openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
 
---Gets the data in the url between start and end filtering out lots of crap
+{-
+Start is the tag you want to find the links in, End is the closing tag,
+the function is for specifying what to get once the links have been isolated
+-}
 desiredSection :: String -> String -> ([[Attribute String]] -> a) -> String -> a
 desiredSection start end f page = fromMain $ parseTags page
     where fromMain = f . getHyperLinks . takeWhile (~/= end) . dropWhile (~/= start)
 
---Get the stuff out of a TagOpen
 getText :: Tag t -> [Attribute t]
 getText (TagOpen _ stuff) = stuff
 getText _ = error "Only use with a TagOpen"
@@ -79,7 +80,7 @@ getImageLink = map (snd . last) . filter (\x -> any (`isSuffixOf` snd (last x)) 
 
 --I believe these are the only supported filetypes by paheal
 filetypes :: [String]
-filetypes = [".jpg", ".png", ".gif"]
+filetypes = [".jpg", ".png", ".gif", ".jpeg"]
 
 {-
 From https://stackoverflow.com/questions/11514671/
