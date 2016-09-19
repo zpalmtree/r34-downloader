@@ -33,9 +33,9 @@ per second. Use the --help or -h flag for help.
 main :: IO ()
 main = do
     args <- getArgs
+    if any (`elem` ["--help","-h"]) args then putStrLn help else do
     url <- askUrl
     dir <- getDir
-    if any (`elem` ["--help","-h"]) args then putStrLn help else do
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
         Left _ -> putStrLn invalidURL
@@ -185,7 +185,7 @@ addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly and you used underscores instead of \
-            \spaces.\n"
+            \spaces."
 
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
