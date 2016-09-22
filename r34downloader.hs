@@ -102,10 +102,11 @@ length is over 255. Not sure if filesystems even support that though.
 -}
 name :: FilePath -> URL -> FilePath
 name directory url
-    | length xs + len > 255 = directory ++ reverse (take len (reverse xs))
+    | length xs + len > maxFileNameLen = directory ++ reverse (take len (reverse xs))
     | otherwise = directory ++ xs
     where xs = reverse . takeWhile (/= '/') $ reverse url
-          len = 255 - length directory
+          maxFileNameLen = 255
+          len = maxFileNameLen - length directory
 
 --Gets the last page available so we get every link from 1 to last page
 getPageNum :: [[(a, String)]] -> Int
@@ -128,7 +129,7 @@ getLinks (x:xs) = do
     input <- openURL x 
     let links = desiredSection "<section id='imagelist'>" "</section" getImageLink input
     printf "%d links added to download...\n" (length links)
-    delay 1000000
+    delay oneSecond
     nextlinks <- getLinks xs
     return (links ++ nextlinks)
 
@@ -138,9 +139,13 @@ niceDownload _ [] = return ()
 niceDownload dir (link:links) = do
     img <- async $ downloadImage dir link
     putStrLn $ "Downloading " ++ link
-    delay 1000000
+    delay oneSecond
     niceDownload dir links
     wait img
+
+--1 second in milliseconds
+oneSecond :: (Num a) => a
+oneSecond = 1000000
 
 {-
 Get the url if it was supplied as an argument, otherwise ask for it.
