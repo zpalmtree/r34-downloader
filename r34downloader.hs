@@ -13,7 +13,7 @@ import Network.URI (parseURI)
 import Text.HTML.TagSoup
 import Data.List (isSuffixOf, intercalate, elemIndex)
 import qualified Data.ByteString as B (writeFile)
-import Data.Maybe (fromMaybe, isJust, mapMaybe)
+import Data.Maybe (fromMaybe, isJust, mapMaybe, fromJust)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
@@ -156,8 +156,10 @@ askUrl = do
     args <- getArgs
     let flags = ["--tag","-t"]
         index = getElemIndex args flags
-    if any (`elem` flags) args && (length args > index)
-        then return (addBaseAddress $ args !! index)
+    case index of
+        Nothing -> promptTag
+        Just i -> if any (`elem` flags) args && (length args > i)
+        then return (addBaseAddress $ args !! i)
         else promptTag
 
 help :: String
@@ -214,12 +216,18 @@ takeNLinks args links
                       Just x -> take (abs x) links
                       Nothing -> links
     where flags = ["-f", "--first"]
-          index = getElemIndex args flags
+          index = fromJust $ getElemIndex args flags
+          {-
+          flags will never be empty, neither will args, so we can safely
+          use fromJust
+          -}
           n = getN args index
 
 --Gets the index of the value after the tag
-getElemIndex :: [String] -> [String] -> Int
-getElemIndex args flags = 1 + head (mapMaybe (`elemIndex` args) flags)
+getElemIndex :: [String] -> [String] -> Maybe Int
+getElemIndex [] _ = Nothing
+getElemIndex _ [] = Nothing
+getElemIndex args flags = Just (1 + head (mapMaybe (`elemIndex` args) flags))
 
 --Gets the argument at the specified index, if it exists, and is a number
 getN :: [String] -> Int -> Maybe Int
@@ -239,7 +247,10 @@ getDir = do
     let flags = ["-d", "--directory"]
         def = return cwd
         index = getElemIndex args flags 
-    isDir <- doesDirectoryExist (args !! index)
-    if any (`elem` flags) args && (length args > index) && isDir
-        then return (addTrailingPathSeparator $ args !! index)
-        else def
+    case index of
+        Nothing -> def
+        Just i -> do
+        isDir <- doesDirectoryExist (args !! i)
+        if any (`elem` flags) args && (length args > i) && isDir
+            then return (addTrailingPathSeparator $ args !! i)
+            else def
