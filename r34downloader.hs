@@ -149,7 +149,7 @@ askURL = do
         maybeURL = getFlagValue args flags
     case maybeURL of
         Nothing -> promptTag
-        Just url -> return $ addBaseAddress (filter isAllowed url)
+        Just url -> return $ addBaseAddress (filter isAllowedChar url)
 
 help :: String
 help = intercalate "\n" ["This program downloads images of a given \
@@ -172,7 +172,7 @@ promptTag = do
     putStrLn "Note that a tag must not have spaces in, use underscores instead."
     putStr "Enter tag: "
     hFlush stdout
-    addBaseAddress . filter isAllowed <$> getLine
+    addBaseAddress . filter isAllowedChar <$> getLine
 
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
@@ -202,11 +202,6 @@ takeNLinks args links = case maybeN of
           maybeN = readMaybe =<< getFlagValue args flags
 
 {-
-getElemIndex :: [String] -> [String] -> Int
-getElemIndex args flags = 1 + head (mapMaybe (`elemIndex` args) flags)
--}
-
-{-
 Gets the value in the argument list following one of the tags specified in flags
 if the flag exists in the argument list, and the argument list is long enough
 to get the next item in the argument list
@@ -220,14 +215,6 @@ getFlagValue args flags
     where len = length args
           flagExists = any (`elem` flags) args
           val = 1 + head (mapMaybe (`elemIndex` args) flags)
-
-{-
-getN :: [String] -> Int -> Maybe Int
-getN args index
-    | length args > index && isJust num = num
-    | otherwise = Nothing
-    where num = readMaybe $ args !! index
--}
 
 getDir :: IO FilePath
 getDir = do
@@ -245,7 +232,7 @@ getDir = do
             else def
 
 allowedChars :: String
-allowedChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_"
+allowedChars = '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 
-isAllowed :: Char -> Bool
-isAllowed c = c `elem` allowedChars
+isAllowedChar :: Char -> Bool
+isAllowedChar c = c `elem` allowedChars
