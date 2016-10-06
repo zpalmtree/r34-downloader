@@ -71,7 +71,7 @@ getHyperLinks = map getText . filter (isTagOpenName "a")
 
 {-
 Extract image link from attribute by checking that it is a valid filetype
-then taking the head of what we have left. It doesn't actually matter
+then taking the last and head of what we have left. It doesn't actually matter
 if we use head or last as the ones which match the pattern are all singleton
 lists
 -}
@@ -148,8 +148,9 @@ oneSecond :: (Num a) => a
 oneSecond = 1000000
 
 {-
-checks that the arg list is long enough for there to be a tag after the 
-tag flag so we don't error on !!
+Get the url if it was supplied as an argument, otherwise ask for it.
+Won't error on args !! 1 because we already checked that the input is 2 or
+greater in length or 0, thus we can't find -t without an input
 -}
 askUrl :: IO URL
 askUrl = do
@@ -198,14 +199,9 @@ noImagesExist page
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
-{-
-this error occurs with no internet, possibly in other scenarios too, not
-sure if we get this with an invalid tag or if that just gets us no images...
--}
 invalidURL :: String
 invalidURL = "Sorry, that URL wasn't valid! Make sure you didn't include \
-                \spaces in your tags, and that your internet connection is working.\
-                \\nUse the --help flag for more info."
+                \spaces in your tags.\nUse the --help flag for more info."
 
 takeNLinks :: [String] -> [URL] -> [URL]
 takeNLinks args links
@@ -228,18 +224,21 @@ getN args index
     | otherwise = Nothing
     where num = readMaybe $ args !! index
 
-{-
-isDir should be evaluated lazily, and because && short circuits, we
-should only reach it when len args > index, so we don't error on !!
--}
+--this is pretty awful
 getDir :: IO FilePath
 getDir = do
     args <- getArgs
     cwd <- addTrailingPathSeparator <$> getCurrentDirectory
     let flags = ["-d", "--directory"]
-        def = return cwd
-        index = getElemIndex args flags 
-    isDir <- doesDirectoryExist (args !! index)
-    if any (`elem` flags) args && (length args > index) && isDir
-        then return (addTrailingPathSeparator $ args !! index)
+    let def = return cwd
+    if any (`elem` flags) args
+        then do
+            let index = getElemIndex args flags
+            if length args > index
+                then do
+                isDir <- doesDirectoryExist (args !! index)
+                if isDir
+                    then return (addTrailingPathSeparator $ args !! index)
+                    else def
+            else def
         else def
