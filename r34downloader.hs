@@ -13,7 +13,7 @@ import Network.URI (parseURI)
 import Text.HTML.TagSoup
 import Data.List (isSuffixOf, intercalate, elemIndex)
 import qualified Data.ByteString as B (writeFile)
-import Data.Maybe (fromMaybe, isJust, mapMaybe)
+import Data.Maybe (fromMaybe, mapMaybe)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
@@ -34,14 +34,14 @@ main :: IO ()
 main = do
     args <- getArgs
     if any (`elem` ["--help","-h"]) args then putStrLn help else do
-    url <- askUrl
+    url <- askURL
     dir <- getDir
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
         Left _ -> putStrLn invalidURL
         Right val -> if noImagesExist val then putStrLn (noImages url) else do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
-            urls = allUrls url lastpage
+            urls = allURLs url lastpage
         links <- takeNLinks args <$> getLinks urls
         niceDownload dir links
 
@@ -69,12 +69,7 @@ or have less filtering to do later
 getHyperLinks :: [Tag String] -> [[Attribute String]]
 getHyperLinks = map getText . filter (isTagOpenName "a")
 
-{-
-Extract image link from attribute by checking that it is a valid filetype
-then taking the last and head of what we have left. It doesn't actually matter
-if we use head or last as the ones which match the pattern are all singleton
-lists
--}
+--Extracts image links from an attribute
 getImageLink :: [[(a, String)]] -> [URL]
 getImageLink = map (snd . last) . filter (\x -> any (`isSuffixOf` snd (last x)) filetypes)
 
@@ -115,8 +110,8 @@ getPageNum xs
     | otherwise = read $ dropWhile (not . isNumber) $ snd $ last $ xs !! 2
 
 --Gets all the urls so we can download the pics from them
-allUrls :: URL -> Int -> [URL]
-allUrls url lastpage = map (f (init url)) [1..lastpage]
+allURLs :: URL -> Int -> [URL]
+allURLs url lastpage = map (f (init url)) [1..lastpage]
     where f xs n = xs ++ show n
 
 {-
@@ -147,19 +142,14 @@ niceDownload dir (link:links) = do
 oneSecond :: (Num a) => a
 oneSecond = 1000000
 
-{-
-Get the url if it was supplied as an argument, otherwise ask for it.
-Won't error on args !! 1 because we already checked that the input is 2 or
-greater in length or 0, thus we can't find -t without an input
--}
-askUrl :: IO URL
-askUrl = do
+askURL :: IO URL
+askURL = do
     args <- getArgs
     let flags = ["--tag","-t"]
-        index = getElemIndex args flags
-    if any (`elem` flags) args && (length args > index)
-        then return (addBaseAddress $ args !! index)
-        else promptTag
+        maybeURL = getFlagValue args flags
+    case maybeURL of
+        Nothing -> promptTag
+        Just url -> return $ addBaseAddress (filter isAllowed url)
 
 help :: String
 help = intercalate "\n" ["This program downloads images of a given \
@@ -182,7 +172,7 @@ promptTag = do
     putStrLn "Note that a tag must not have spaces in, use underscores instead."
     putStr "Enter tag: "
     hFlush stdout
-    addBaseAddress <$> getLine
+    addBaseAddress . filter isAllowed <$> getLine
 
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
@@ -201,44 +191,61 @@ noImagesExist page
 
 invalidURL :: String
 invalidURL = "Sorry, that URL wasn't valid! Make sure you didn't include \
-                \spaces in your tags.\nUse the --help flag for more info."
+                \spaces in your tags, and you have a working internet \
+                \connection.\nUse the --help flag for more info."
 
 takeNLinks :: [String] -> [URL] -> [URL]
-takeNLinks args links
-    | not $ any (`elem` flags) args = links
-    | otherwise = case n of
-                      Just x -> take (abs x) links
-                      Nothing -> links
+takeNLinks args links = case maybeN of
+    Just x -> take (abs x) links
+    Nothing -> links
     where flags = ["-f", "--first"]
-          index = getElemIndex args flags
-          n = getN args index
+          maybeN = readMaybe =<< getFlagValue args flags
 
---Gets the index of the value after the tag
+{-
 getElemIndex :: [String] -> [String] -> Int
 getElemIndex args flags = 1 + head (mapMaybe (`elemIndex` args) flags)
+-}
 
---Gets the argument at the specified index, if it exists, and is a number
+{-
+Gets the value in the argument list following one of the tags specified in flags
+if the flag exists in the argument list, and the argument list is long enough
+to get the next item in the argument list
+-}
+getFlagValue :: [String] -> [String] -> Maybe String
+getFlagValue [] _ = Nothing
+getFlagValue _ [] = Nothing
+getFlagValue args flags
+    | flagExists && len > val = Just (args !! val)
+    | otherwise = Nothing
+    where len = length args
+          flagExists = any (`elem` flags) args
+          val = 1 + head (mapMaybe (`elemIndex` args) flags)
+
+{-
 getN :: [String] -> Int -> Maybe Int
 getN args index
     | length args > index && isJust num = num
     | otherwise = Nothing
     where num = readMaybe $ args !! index
+-}
 
---this is pretty awful
 getDir :: IO FilePath
 getDir = do
     args <- getArgs
     cwd <- addTrailingPathSeparator <$> getCurrentDirectory
     let flags = ["-d", "--directory"]
     let def = return cwd
-    if any (`elem` flags) args
-        then do
-            let index = getElemIndex args flags
-            if length args > index
-                then do
-                isDir <- doesDirectoryExist (args !! index)
-                if isDir
-                    then return (addTrailingPathSeparator $ args !! index)
-                    else def
+        maybeDir = getFlagValue args flags
+    case maybeDir of
+        Nothing -> def
+        Just dir -> do
+        isDir <- doesDirectoryExist dir
+        if isDir
+            then return (addTrailingPathSeparator dir)
             else def
-        else def
+
+allowedChars :: String
+allowedChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_"
+
+isAllowed :: Char -> Bool
+isAllowed c = c `elem` allowedChars
