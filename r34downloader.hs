@@ -11,11 +11,11 @@
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest, getResponseBody, defaultGETRequest_)
 import Network.URI (parseURI)
 import Text.HTML.TagSoup
-import Data.List (isSuffixOf, intercalate, elemIndex)
+import Data.List (isSuffixOf, intercalate, elemIndex, isPrefixOf, lines)
 import qualified Data.ByteString as B (writeFile)
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Maybe (fromMaybe, mapMaybe, isNothing, fromJust)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
-import Data.Char (isNumber)
+import Data.Char (isNumber, isAlphaNum)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.Environment (getArgs)
@@ -33,7 +33,8 @@ per second. Use the --help or -h flag for help.
 main :: IO ()
 main = do
     args <- getArgs
-    if any (`elem` ["--help","-h"]) args then putStrLn help else do
+    if any (`elem` helpFlags) args then putStrLn help else
+        if any (`elem` searchFlags) args then search args else do
     url <- askURL
     dir <- getDir
     firstpage <- try (openURL url) :: IO (Either SomeException String)
@@ -145,8 +146,7 @@ oneSecond = 1000000
 askURL :: IO URL
 askURL = do
     args <- getArgs
-    let flags = ["--tag","-t"]
-        maybeURL = getFlagValue args flags
+    let maybeURL = getFlagValue args tagFlags
     case maybeURL of
         Nothing -> promptTag
         Just url -> return $ addBaseAddress (filter isAllowedChar url)
@@ -198,8 +198,7 @@ takeNLinks :: [String] -> [URL] -> [URL]
 takeNLinks args links = case maybeN of
     Just x -> take (abs x) links
     Nothing -> links
-    where flags = ["-f", "--first"]
-          maybeN = readMaybe =<< getFlagValue args flags
+    where maybeN = readMaybe =<< getFlagValue args firstFlags
 
 {-
 Gets the value in the argument list following one of the tags specified in flags
@@ -220,9 +219,8 @@ getDir :: IO FilePath
 getDir = do
     args <- getArgs
     cwd <- addTrailingPathSeparator <$> getCurrentDirectory
-    let flags = ["-d", "--directory"]
     let def = return cwd
-        maybeDir = getFlagValue args flags
+        maybeDir = getFlagValue args directoryFlags
     case maybeDir of
         Nothing -> def
         Just dir -> do
@@ -236,3 +234,61 @@ allowedChars = '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 
 isAllowedChar :: Char -> Bool
 isAllowedChar c = c `elem` allowedChars
+
+search :: [String] -> IO ()
+search args
+    | isNothing maybeSearchTerm ||
+      not (isAlphaNum firstChar) = putStrLn invalidSearchTerm
+    | otherwise = do
+        page <- openURL url
+        let tags = filter (searchTerm `isPrefixOf`) (getTags page)
+        case tags of
+            [] -> putStrLn noTags
+            xs -> mapM_ putStrLn xs
+    where maybeSearchTerm = getFlagValue args searchFlags
+          searchTerm = fromJust maybeSearchTerm
+          firstChar = head searchTerm
+          baseURL = "http://rule34.paheal.net/tags?starts_with="
+          url = baseURL ++ [firstChar]
+
+helpFlags :: [String]
+helpFlags = ["--help","-h"]
+
+directoryFlags :: [String]
+directoryFlags = ["--directory","-d"]
+
+searchFlags :: [String]
+searchFlags = ["--search","-s"]
+
+tagFlags :: [String]
+tagFlags = ["--tag","-t"]
+
+firstFlags :: [String]
+firstFlags = ["--first","-f"]
+
+invalidSearchTerm :: String
+invalidSearchTerm = "No search term entered, or invalid search term entered, exiting."
+
+noTags :: String
+noTags = "No tag found with that search term, please try again"
+
+getTags :: String -> [String]
+getTags soup = map isolate tagLines
+    where tagLines = filter (isPrefixOf "&nbsp;") (lines soup)
+
+isolate :: String -> String
+isolate soup = takeWhile (/= '/') start
+    where start = myDrop "list/" soup
+
+{-
+I want to die
+Searches through string until search term (xs) is found, then takes the
+rest of the string after that term
+-}
+myDrop :: String -> String -> String
+myDrop xs ys = myDrop' xs xs ys ys
+    where myDrop' _ [] _ bs = bs
+          myDrop' _ _ _ [] = []
+          myDrop' searchTerm (a:as) soup (b:bs)
+            | a == b = myDrop' searchTerm as soup bs
+            | otherwise = myDrop' searchTerm searchTerm soup bs
