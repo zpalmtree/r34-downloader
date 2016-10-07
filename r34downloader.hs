@@ -237,7 +237,7 @@ search args
           searchTerm = map toLower $ fromJust maybeSearchTerm
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
-          url = baseURL ++ [firstChar]
+          url = baseURL ++ [firstChar] ++ "&mincount=1"
 
 helpFlags :: [String]
 helpFlags = ["--help","-h"]
