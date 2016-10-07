@@ -1,0 +1,49 @@
+rule34-paheal-downloader
+
+A program to download all the images of a given tag from https://rule34.paheal.net
+
+To use, place the program in the folder which you wish to download images to, and invoke the program.
+
+If you don't provide any command line arguments the program will then prompt you for a tag to download from.
+
+Unfortunately the website only lets us make a request once a second so that's the reason you aren't maxing out your bandwidth.
+
+The program does support async IO, so a slow network connection will not effect the speed as much, we send a request roughly every second.
+
+Flags:
+
+
+-t / --tag
+
+Specify a tag to download on the command line. You must use underscores instead of spaces.
+
+Usage: ./r34downloader --tag "cute_anime_girl"
+
+This will download all images with the tag cute_anime_girl.
+
+
+-f / --first
+
+Specify the amount of images to download. Input should be a positive number.
+
+Usage: ./r34download --t "cute_anime_girl" --first 10
+
+This will download the first 10 images from the tag cute_anime_girl, if it exists.
+
+
+-h / --help
+
+Prints a help message.
+
+Usage: ./r34download --help
+
+Outputs this help message.
+
+
+-d / --directory
+
+Lets you select the directory to download the images to. The directory must exist. If the directory does not exist, the program will fall back to the current working directory.
+
+Usage: ./r34downloader --t "cute_anime_girl" --directory "/media/Pictures"
+
+This will download all images with the tag cute_anime_girl to the directory /media/Pictures, if it exists.
