@@ -74,7 +74,6 @@ getHyperLinks = map getText . filter (isTagOpenName "a")
 getImageLink :: [[(a, String)]] -> [URL]
 getImageLink = map (snd . last) . filter (\x -> any (`isSuffixOf` snd (last x)) filetypes)
 
---I believe these are the only supported filetypes by paheal
 filetypes :: [String]
 filetypes = [".jpg", ".png", ".gif", ".jpeg"]
 
@@ -110,7 +109,11 @@ getPageNum xs
     | length xs <= 2 = 1 --only one page long - will error on !!
     | otherwise = read $ dropWhile (not . isNumber) $ snd $ last $ xs !! 2
 
---Gets all the urls so we can download the pics from them
+{-
+We use init to drop the '1' at the end of the url and replace it with 
+the current page number. It's easier to remove it here than to add it in
+a few other places
+-}
 allURLs :: URL -> Int -> [URL]
 allURLs url lastpage = map (f (init url)) [1..lastpage]
     where f xs n = xs ++ show n
@@ -223,6 +226,10 @@ allowedChars = '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 isAllowedChar :: Char -> Bool
 isAllowedChar c = c `elem` allowedChars
 
+{-
+We use &mincount=1 to add the smaller tags as well as the more popular ones
+Tags have to begin with a-z A-Z or 0-9 and not be empty.
+-}
 search :: [String] -> IO ()
 search args
     | isNothing maybeSearchTerm ||
