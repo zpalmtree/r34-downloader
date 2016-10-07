@@ -11,11 +11,11 @@
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest, getResponseBody, defaultGETRequest_)
 import Network.URI (parseURI)
 import Text.HTML.TagSoup
-import Data.List (isSuffixOf, intercalate, elemIndex, isPrefixOf, lines)
+import Data.List (isSuffixOf, elemIndex, isPrefixOf, lines)
 import qualified Data.ByteString as B (writeFile)
 import Data.Maybe (fromMaybe, mapMaybe, isNothing, fromJust)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
-import Data.Char (isNumber, isAlphaNum)
+import Data.Char (isNumber, isAlphaNum, toLower)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.Environment (getArgs)
@@ -33,7 +33,7 @@ per second. Use the --help or -h flag for help.
 main :: IO ()
 main = do
     args <- getArgs
-    if any (`elem` helpFlags) args then putStrLn help else
+    if any (`elem` helpFlags) args then help else
         if any (`elem` searchFlags) args then search args else do
     url <- askURL
     dir <- getDir
@@ -61,7 +61,7 @@ desiredSection start end f page = fromMain $ parseTags page
 
 getText :: Tag t -> [Attribute t]
 getText (TagOpen _ stuff) = stuff
-getText _ = error "Only use with a TagOpen"
+getText _ = error "Only use with a TagOpen."
 
 {-
 Hyperlinks all start with the "a" identifier, this means we will get less crud
@@ -151,20 +151,8 @@ askURL = do
         Nothing -> promptTag
         Just url -> return $ addBaseAddress (filter isAllowedChar url)
 
-help :: String
-help = intercalate "\n" ["This program downloads images of a given \
-            \tag from http://rule34.paheal.net.","","Either enter the tag you wish \
-            \to download with the flag -t or --tag and then the tag.","Please note \
-            \that the tag must not have spaces in to allow the website to query \
-            \correctly.","Please use underscores instead.","","For example, the WRONG \
-            \way to do it is ./r34downloader -t \"Cute anime girl\".","The CORRECT way \
-            \is ./r34downloader -t \"Cute_anime_girl\".","","If you only want to download \
-            \the first n images, use the -f or --first flag.","Example: ./r34downloader \
-            \--tag \"Cute_anime_girl\" --first 10","This will take the first 10 images \
-            \from the tag Cute_anime_girl if 10 exist.","","If you want to download the \
-            \images to somewhere otherwise than the current directory, ", "specify that \
-            \with the -d or --directory flag.","Example: ./r34downloader --t \"Cute\
-            \_anime_girl\" --directory \"/media/Pictures\""]
+help :: IO ()
+help = putStr =<< readFile "help.txt"
 
 promptTag :: IO String
 promptTag = do
@@ -246,7 +234,7 @@ search args
             [] -> putStrLn noTags
             xs -> mapM_ putStrLn xs
     where maybeSearchTerm = getFlagValue args searchFlags
-          searchTerm = fromJust maybeSearchTerm
+          searchTerm = map toLower $ fromJust maybeSearchTerm
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar]
@@ -270,18 +258,26 @@ invalidSearchTerm :: String
 invalidSearchTerm = "No search term entered, or invalid search term entered, exiting."
 
 noTags :: String
-noTags = "No tag found with that search term, please try again"
+noTags = "No tag found with that search term, please try again."
 
+{-
+All lines containing a tag are prefixed with the below magic string
+We also lower case it all so case sensitivity in searching is no issue
+-}
 getTags :: String -> [String]
-getTags soup = map isolate tagLines
+getTags soup = map (map toLower . isolate) tagLines
     where tagLines = filter (isPrefixOf "&nbsp;") (lines soup)
 
+{-
+list/ is immediatly before the tag name in the string we extracted earlier
+then we take until the next / which terminates the tag
+-}
 isolate :: String -> String
 isolate soup = takeWhile (/= '/') start
     where start = myDrop "list/" soup
 
 {-
-I want to die
+ugly....
 Searches through string until search term (xs) is found, then takes the
 rest of the string after that term
 -}
