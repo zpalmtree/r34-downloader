@@ -5,9 +5,9 @@ To use, place the program in the folder which you wish to download images to, an
 
 If you don't provide any command line arguments the program will then prompt you for a tag to download from.
 
-Unfortunately the website only lets us make a request once a second so that's the reason you aren't maxing out your bandwidth.
+The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
-The program does support async IO, so a slow network connection will not effect the speed as much, we send a request roughly every second.
+The program does support async IO, so a slow network connection will affect the speed as little as possible, a download should being roughly every second.
 
 ## Flags:
 
