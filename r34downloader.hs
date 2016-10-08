@@ -27,11 +27,6 @@ import System.FilePath.Posix (addTrailingPathSeparator)
 import Search (search)
 import Utilities
 
-{-
-This program is a tool to quickly rip all the images from a given tag on
-rule34.paheal. It is not super fast due to the website limiting requests to one
-per second. Use the --help or -h flag for help.
--}
 main :: IO ()
 main = do
     args <- getArgs
