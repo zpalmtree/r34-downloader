@@ -39,7 +39,7 @@ main = do
     dir <- getDir
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
-        Left _ -> putStrLn invalidURL
+        Left _ -> putStrLn noInternet
         Right val -> if noImagesExist val then putStrLn (noImages url) else do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
             urls = allURLs url lastpage
@@ -152,7 +152,7 @@ askURL = do
     let maybeURL = getFlagValue args tagFlags
     case maybeURL of
         Nothing -> promptTag
-        Just url -> return $ addBaseAddress (filter isAllowedChar url)
+        Just url -> return $ addBaseAddress (filter isAllowedChar (map replace url))
 
 help :: IO ()
 help = putStr =<< readFile "help.txt"
@@ -160,18 +160,16 @@ help = putStr =<< readFile "help.txt"
 promptTag :: IO String
 promptTag = do
     putStrLn "Enter the tag which you wish to download."
-    putStrLn "Note that a tag must not have spaces in, use underscores instead."
     putStr "Enter tag: "
     hFlush stdout
-    addBaseAddress . filter isAllowedChar <$> getLine
+    addBaseAddress . filter isAllowedChar . map replace <$> getLine
 
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
 noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
-            \Ensure you spelt it correctly and you used underscores instead of \
-            \spaces."
+            \Ensure you spelt it correctly."
 
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
@@ -179,11 +177,6 @@ noImagesExist page
     | null $ findError $ parseTags page = False
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
-
-invalidURL :: String
-invalidURL = "Sorry, that URL wasn't valid! Make sure you didn't include \
-                \spaces in your tags, and you have a working internet \
-                \connection.\nUse the --help flag for more info."
 
 takeNLinks :: [String] -> [URL] -> [URL]
 takeNLinks args links = case maybeN of
@@ -235,11 +228,14 @@ search args
     | isNothing maybeSearchTerm ||
       not (isAlphaNum firstChar) = putStrLn invalidSearchTerm
     | otherwise = do
-        page <- openURL url
-        let tags = filter (searchTerm `isPrefixOf`) (getTags page)
-        case tags of
-            [] -> putStrLn noTags
-            xs -> mapM_ putStrLn xs
+        eitherPage <- try (openURL url) :: IO (Either SomeException String)
+        case eitherPage of
+            Left _ -> putStrLn noInternet
+            Right page -> do
+            let tags = filter (searchTerm `isPrefixOf`) (getTags page)
+            case tags of
+                [] -> putStrLn noTags
+                _ -> mapM_ putStrLn tags
     where maybeSearchTerm = getFlagValue args searchFlags
           searchTerm = map toLower $ fromJust maybeSearchTerm
           firstChar = head searchTerm
@@ -295,3 +291,12 @@ myDrop xs ys = myDrop' xs xs ys ys
           myDrop' searchTerm (a:as) soup (b:bs)
             | a == b = myDrop' searchTerm as soup bs
             | otherwise = myDrop' searchTerm searchTerm soup bs
+
+noInternet :: String 
+noInternet = "Sorry, we couldn't connect to the website. Check that it's not \
+            \down and you have an internet connection."
+
+--Replace spaces with underscores so tag searching is more user friendly
+replace :: Char -> Char
+replace ' ' = '_'
+replace c = c
