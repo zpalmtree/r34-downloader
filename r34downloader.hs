@@ -147,8 +147,7 @@ help = putStr =<< readFile "help.txt"
 
 promptTag :: IO String
 promptTag = do
-    putStrLn "Enter the tag which you wish to download."
-    putStr "Enter tag: "
+    putStr "Enter the tag which you wish to download: "
     hFlush stdout
     addBaseAddress . filter isAllowedChar . map replaceSpace <$> getLine
 
