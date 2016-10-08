@@ -1,5 +1,5 @@
 # rule34-paheal-downloader
-A program to download all the images of a given tag from https://rule34.paheal.net
+A program to download all the images of a given tag from https://rule34.paheal.net [Warning - Not Safe For Work]
 
 To use, place the program in the folder which you wish to download images to, and invoke the program.
 
