@@ -12,7 +12,7 @@ The program does support async IO, so a slow network connection will not effect 
 ## Flags:
 
 #### -t / --tag
-Specify a tag to download on the command line. You must use underscores instead of spaces.
+Specify a tag to download on the command line.
 
 Usage: `./r34downloader --tag "cute_anime_girl"`
 
