@@ -42,7 +42,7 @@ main = do
             urls = allURLs url lastpage
         links <- takeNLinks args <$> getLinks urls
         let num = length links
-        niceDownload dir links (1,num)
+        niceDownload dir links num
 
 type URL = String
 
@@ -125,14 +125,16 @@ getLinks (x:xs) = do
     return (links ++ nextlinks)
 
 --Add a delay to our download to not get rate limited
-niceDownload :: FilePath -> [URL] -> (Int,Int) -> IO ()
-niceDownload _ [] _ = return ()
-niceDownload dir (link:links) (a,b) = do
-    img <- async $ downloadImage dir link
-    printf "Downloading %d out of %d: %s\n" a b link
-    delay oneSecond
-    niceDownload dir links (succ a, b)
-    wait img
+niceDownload :: FilePath -> [URL] -> Int -> IO ()
+niceDownload dir links num = niceDownload' links 1
+    where niceDownload' :: [URL] -> Int -> IO () 
+          niceDownload' [] _ = return ()
+          niceDownload' (link:rest) x = do
+            img <- async $ downloadImage dir link
+            printf "Downloading %d out of %d: %s\n" x num link
+            delay oneSecond
+            niceDownload' rest (succ x)
+            wait img
 
 askURL :: IO URL
 askURL = do
