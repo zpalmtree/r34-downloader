@@ -41,7 +41,8 @@ main = do
         let lastpage = desiredSection "<section id='paginator'>" "</section" getPageNum val
             urls = allURLs url lastpage
         links <- takeNLinks args <$> getLinks urls
-        niceDownload dir links
+        let num = length links
+        niceDownload dir links (1,num)
 
 type URL = String
 
@@ -124,13 +125,13 @@ getLinks (x:xs) = do
     return (links ++ nextlinks)
 
 --Add a delay to our download to not get rate limited
-niceDownload :: FilePath -> [URL] -> IO ()
-niceDownload _ [] = return ()
-niceDownload dir (link:links) = do
+niceDownload :: FilePath -> [URL] -> (Int,Int) -> IO ()
+niceDownload _ [] _ = return ()
+niceDownload dir (link:links) (a,b) = do
     img <- async $ downloadImage dir link
-    putStrLn $ "Downloading " ++ link
+    printf "Downloading %d out of %d: %s\n" a b link
     delay oneSecond
-    niceDownload dir links
+    niceDownload dir links (succ a, b)
     wait img
 
 askURL :: IO URL
