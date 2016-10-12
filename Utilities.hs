@@ -32,7 +32,8 @@ noTags :: String
 noTags = "No tag found with that search term, please try again."
 
 invalidSearchTerm :: String
-invalidSearchTerm = "No search term entered, or invalid search term entered, exiting."
+invalidSearchTerm = "No search term entered, or invalid search term entered\
+                    \ , exiting."
 
 helpFlags :: [String]
 helpFlags = ["--help","-h"]
@@ -56,9 +57,9 @@ openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
 
 {-
-Gets the value in the argument list following one of the tags specified in flags
-if the flag exists in the argument list, and the argument list is long enough
-to get the next item in the argument list
+Gets the value in the argument list following one of the tags specified in 
+flags if the flag exists in the argument list, and the argument list is
+long enough to get the next item in the argument list
 -}
 getFlagValue :: [String] -> [String] -> Maybe String
 getFlagValue [] _ = Nothing
