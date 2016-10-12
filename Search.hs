@@ -1,12 +1,14 @@
 module Search
-( search
+(
+search
 ) where
 
 import Control.Exception (try, SomeException)
 import Data.List (tails, stripPrefix, isPrefixOf)
 import Data.Maybe (isNothing, fromJust)
 import Data.Char (isAlphaNum, toLower)
-import Utilities (invalidSearchTerm, openURL, noInternet, noTags, getFlagValue, searchFlags)
+import Utilities (invalidSearchTerm, openURL, noInternet, noTags, 
+                    getFlagValue, searchFlags)
 
 {-
 We use &mincount=1 to add the smaller tags as well as the more popular ones
