@@ -85,7 +85,7 @@ downloadImage directory url = do
     where get = let uri = fromMaybe (error $ "Invalid URI: " ++ url)
                             (parseURI url)
                 in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
-          filename = name directory url
+          filename = removeEscapeSequences $ name directory url
 
 {-
 Extract the file name of the image from the url and add it to the directory
@@ -144,7 +144,8 @@ niceDownload dir links = niceDownload' links 1
           niceDownload' [] _ = return ()
           niceDownload' (link:rest) x = do
             img <- async $ downloadImage dir link
-            printf "Downloading %d out of %d: %s\n" x num link
+            printf "Downloading %d out of %d: %s\n" x num 
+                    (removeEscapeSequences link)
             delay oneSecond
             niceDownload' rest (succ x)
             wait img
