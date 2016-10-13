@@ -62,8 +62,6 @@ flags if the flag exists in the argument list, and the argument list is
 long enough to get the next item in the argument list
 -}
 getFlagValue :: [String] -> [String] -> Maybe String
-getFlagValue [] _ = Nothing
-getFlagValue _ [] = Nothing
 getFlagValue args flags
     | flagExists && len > val = Just (args !! val)
     | otherwise = Nothing
@@ -86,7 +84,7 @@ allowedChars :: String
 allowedChars = '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 
 isAllowedChar :: Char -> Bool
-isAllowedChar c = c `elem` allowedChars
+isAllowedChar = flip elem allowedChars
 
 --Replace spaces with underscores so tag searching is more user friendly
 replaceSpace :: Char -> Char
