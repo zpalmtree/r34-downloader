@@ -15,6 +15,7 @@ module Utilities
 , addBaseAddress
 , isAllowedChar
 , replaceSpace
+, removeEscapeSequences
 ) where
 
 import Data.Maybe (mapMaybe)
@@ -90,3 +91,31 @@ isAllowedChar = flip elem allowedChars
 replaceSpace :: Char -> Char
 replaceSpace ' ' = '_'
 replaceSpace c = c
+
+removeEscapeSequences :: String -> String
+removeEscapeSequences [] = []
+removeEscapeSequences ('%':a:b:rest) =
+    case code of
+        "20" -> go '_'
+        "21" -> go '!'
+        "23" -> go '#'
+        "24" -> go '$'
+        "26" -> go '&'
+        "27" -> go '\''
+        "28" -> go '('
+        "29" -> go ')'
+        "2A" -> go '*'
+        "2B" -> go '+'
+        "2C" -> go ','
+        "2F" -> go '/'
+        "3A" -> go ':'
+        "3B" -> go ';'
+        "3D" -> go '='
+        "3F" -> go '?'
+        "40" -> go '@'
+        "5B" -> go '['
+        "5D" -> go ']'
+        _   -> '%' : a : b : removeEscapeSequences rest
+    where code = a : [b]
+          go c = c : removeEscapeSequences rest
+removeEscapeSequences (c:cs) = c : removeEscapeSequences cs
