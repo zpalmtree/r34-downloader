@@ -107,9 +107,8 @@ name directory url
 getPageNum :: [[(a, String)]] -> Int
 getPageNum xs
     | length xs <= 2 = 1 --only one page long - will error on !!
-    | otherwise = read $ dropWhile notNum desired
+    | otherwise = read $ reverse $ takeWhile isNumber $ reverse desired
     where desired = snd $ last $ xs !! 2
-          notNum = not . isNumber
 
 {-
 We use init to drop the '1' at the end of the url and replace it with 
