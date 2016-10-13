@@ -8,7 +8,7 @@ import Data.List (tails, stripPrefix, isPrefixOf)
 import Data.Maybe (isNothing, fromJust)
 import Data.Char (isAlphaNum, toLower)
 import Utilities (invalidSearchTerm, openURL, noInternet, noTags, 
-                    getFlagValue, searchFlags)
+                    getFlagValue, searchFlags, removeEscapeSequences)
 
 {-
 We use &mincount=1 to add the smaller tags as well as the more popular ones
@@ -54,5 +54,5 @@ All lines containing a tag are prefixed with the below magic string
 We also lower case it all so case sensitivity in searching is no issue
 -}
 getTags :: String -> [String]
-getTags soup = map (map toLower . isolate) tagLines
+getTags soup = map (map toLower . removeEscapeSequences . isolate) tagLines
     where tagLines = filter (isPrefixOf "&nbsp;") (lines soup)
