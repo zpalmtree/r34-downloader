@@ -40,6 +40,8 @@ Usage: `./r34downloader -t "cute_anime_girl" --directory "/media/Pictures"`
 
 This will download all images with the tag cute_anime_girl to the directory /media/Pictures, if it exists.
 
+If the directory does not exist, it will fall back to the current directory.
+
 #### -s / --search
 Lets you search for a tag if you don't know if it exists/the full name.
 
