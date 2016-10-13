@@ -38,8 +38,8 @@ list/ is immediatly before the tag name in the string we extracted earlier
 then we take until the next / which terminates the tag
 -}
 isolate :: String -> String
-isolate soup = takeWhile (/= '/') start
-    where start = myDrop "list/" soup
+isolate page = takeWhile (/= '/') start
+    where start = myDrop "list/" page
 
 --Gets the text remaining in the string after the searchTerm
 myDrop :: String -> String -> String
