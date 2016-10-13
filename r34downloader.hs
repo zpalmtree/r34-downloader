@@ -12,7 +12,6 @@ import Network.HTTP (getResponseBody, simpleHTTP, getResponseBody,
                         defaultGETRequest_)
 import Network.URI (parseURI)
 import Text.HTML.TagSoup
-import Data.List (isSuffixOf)
 import qualified Data.ByteString as B (writeFile)
 import Data.Maybe (fromMaybe)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
@@ -24,7 +23,7 @@ import System.IO (hFlush, stdout)
 import Control.Concurrent.Async (async, wait)
 import Control.Exception (try, SomeException)
 import Text.Read (readMaybe)
-import System.FilePath.Posix (addTrailingPathSeparator)
+import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
 import Search (search)
 import Utilities
 
@@ -44,8 +43,7 @@ main = do
             start = "<section id='paginator'>"
             end = "</section"
         links <- takeNLinks args <$> getLinks urls
-        let num = length links
-        niceDownload dir links num
+        niceDownload dir links
 
 type URL = String
 
@@ -56,8 +54,8 @@ the function is for specifying what to get once the links have been isolated
 desiredSection :: String -> String -> ([[Attribute String]] -> a)
                     -> String -> a
 desiredSection start end f page = fromMain $ parseTags page
-    where fromMain = f . getHyperLinks .
-                        takeWhile (~/= end) . dropWhile (~/= start)
+    where fromMain = f . getHyperLinks . local
+          local = takeWhile (~/= end) . dropWhile (~/= start)
 
 getText :: Tag t -> [Attribute t]
 getText (TagOpen _ stuff) = stuff
@@ -72,8 +70,9 @@ getHyperLinks = map getText . filter (isTagOpenName "a")
 
 --Extracts image links from an attribute
 getImageLink :: [[(a, String)]] -> [URL]
-getImageLink = map (snd . last) . f
-    where f = filter (\x -> any (`isSuffixOf` snd (last x)) filetypes)
+getImageLink xs = filter isImage links
+    where links = map (snd . last) xs
+          isImage x = takeExtension x `elem` filetypes
 
 {-
 From https://stackoverflow.com/questions/11514671/
@@ -82,10 +81,11 @@ From https://stackoverflow.com/questions/11514671/
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage directory url = do
     image <- get
-    B.writeFile (name directory url) image
+    B.writeFile filename image
     where get = let uri = fromMaybe (error $ "Invalid URI: " ++ url)
                             (parseURI url)
                 in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
+          filename = name directory url
 
 {-
 Extract the file name of the image from the url and add it to the directory
@@ -107,7 +107,9 @@ name directory url
 getPageNum :: [[(a, String)]] -> Int
 getPageNum xs
     | length xs <= 2 = 1 --only one page long - will error on !!
-    | otherwise = read $ dropWhile (not . isNumber) $ snd $ last $ xs !! 2
+    | otherwise = read $ dropWhile notNum desired
+    where desired = snd $ last $ xs !! 2
+          notNum = not . isNumber
 
 {-
 We use init to drop the '1' at the end of the url and replace it with 
@@ -115,8 +117,9 @@ the current page number. It's easier to remove it here than to add it in
 a few other places
 -}
 allURLs :: URL -> Int -> [URL]
-allURLs url lastpage = map (f (init url)) [1..lastpage]
-    where f xs n = xs ++ show n
+allURLs url lastpage = map (addPageNum baseURL) [1..lastpage]
+    where addPageNum xs n = xs ++ show n
+          baseURL = init url
 
 {-
 Gets all the image links so we can download them, once every second so
@@ -135,9 +138,10 @@ getLinks (x:xs) = do
     return (links ++ nextlinks)
 
 --Add a delay to our download to not get rate limited
-niceDownload :: FilePath -> [URL] -> Int -> IO ()
-niceDownload dir links num = niceDownload' links 1
-    where niceDownload' :: [URL] -> Int -> IO () 
+niceDownload :: FilePath -> [URL] -> IO ()
+niceDownload dir links = niceDownload' links 1
+    where num = length links
+          niceDownload' :: [URL] -> Int -> IO () 
           niceDownload' [] _ = return ()
           niceDownload' (link:rest) x = do
             img <- async $ downloadImage dir link
@@ -172,9 +176,10 @@ noImagesExist page
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
 takeNLinks :: [String] -> [URL] -> [URL]
-takeNLinks args links = case maybeN of
-    Just x -> take (abs x) links
-    Nothing -> links
+takeNLinks args links =
+    case maybeN of
+        Just x -> take x links
+        Nothing -> links
     where maybeN = readMaybe =<< getFlagValue args firstFlags
 
 getDir :: IO FilePath
