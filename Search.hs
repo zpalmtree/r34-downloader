@@ -16,8 +16,7 @@ Tags have to begin with a-z A-Z or 0-9 and not be empty.
 -}
 search :: [String] -> IO ()
 search args
-    | isNothing maybeSearchTerm ||
-      not (isAlphaNum firstChar) = putStrLn invalidSearchTerm
+    | isNothing maybeSearchTerm = putStrLn invalidSearchTerm
     | otherwise = do
         eitherPage <- try (openURL url) :: IO (Either SomeException String)
         case eitherPage of
