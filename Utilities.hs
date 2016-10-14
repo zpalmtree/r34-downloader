@@ -81,7 +81,7 @@ noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly."
 
-allowedChars = ['_', '\'', '#', '*', '$', '+', ':', '!', '&', '?']
+allowedChars = ['_', '\'', '-', '.', ':', '@', '+', '[']
                 ++ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 
 isAllowedChar :: Char -> Bool
