@@ -62,6 +62,23 @@ getText (TagOpen _ stuff) = stuff
 getText _ = error "Only use with a TagOpen."
 
 {-
+If there is only one image for a tag, we get redirected to the image itself
+We then need to extract the hyperlink for the image in a slightly different 
+way, hence this function. redirect is the bit of text we downloaded previously
+which tells us the url of the page containing the desired image, we extract the
+number and stick it onto the base url, download it, then extract the full image 
+from this page. wew!
+-}
+desiredLink :: String -> IO [URL]
+desiredLink redirect = do
+    input <- openURL (baseURL ++ num)
+    return $ getImageLink . filter notEmpty . extract $ parseTags input
+    where extract = map getText . filter (isTagOpenName "form")
+          notEmpty = not . null
+          baseURL = "http://rule34.paheal.net/post/view/"
+          num = takeWhile isNumber $ dropWhile (not . isNumber) redirect
+
+{-
 Hyperlinks all start with the "a" identifier, this means we will get less crud
 or have less filtering to do later
 -}
@@ -131,6 +148,7 @@ getLinks (x:xs) = do
     let links = desiredSection start end getImageLink input
         start = "<section id='imagelist'>"
         end = "</section"
+    if null links then desiredLink input else do
     printf "%d links added to download...\n" (length links)
     delay oneSecond
     nextlinks <- getLinks xs
