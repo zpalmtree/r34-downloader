@@ -7,8 +7,9 @@ import Control.Exception (try, SomeException)
 import Data.List (tails, stripPrefix, isPrefixOf)
 import Data.Maybe (isNothing, fromJust)
 import Data.Char (isAlphaNum, toLower)
-import Utilities (invalidSearchTerm, openURL, noInternet, noTags, 
-                    getFlagValue, searchFlags, removeEscapeSequences)
+import Utilities (invalidSearchTerm, openURL, noInternet, noTags,
+                    getFlagValue, searchFlags, removeEscapeSequences,
+                    isAllowedChar)
 
 {-
 We use &mincount=1 to add the smaller tags as well as the more popular ones
@@ -17,7 +18,7 @@ Tags have to begin with a-z A-Z or 0-9 and not be empty.
 search :: [String] -> IO ()
 search args
     | isNothing maybeSearchTerm ||
-      not (isAlphaNum firstChar) = putStrLn invalidSearchTerm
+      not (isAllowedChar firstChar) = putStrLn invalidSearchTerm
     | otherwise = do
         eitherPage <- try (openURL url) :: IO (Either SomeException String)
         case eitherPage of
