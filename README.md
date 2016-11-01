@@ -70,7 +70,7 @@ Enter the directory which contains the r34downloader.hs file and run
 
 `ghc r34downloader.hs`
 
-Note that some intermediate compile files will be left around, r34downloader.hi and r34downloader.o. You can delete these if you wish.
+Note that some intermediate compile files will be left around, r34downloader.hi, r34downloader.o, Search.hi, Search.o, Utilities.h, and Utilities.o. You can delete these if you wish.
 
 #### Running the program
 Run
