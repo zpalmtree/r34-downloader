@@ -172,7 +172,7 @@ askURL :: IO URL
 askURL = do
     args <- getArgs
     let maybeURL = getFlagValue args tagFlags
-    let pretty x = addBaseAddress (filter isAllowedChar (map replaceSpace x))
+        pretty x = addBaseAddress (filter isAllowedChar (map replaceSpace x))
     case maybeURL of
         Nothing -> promptTag
         Just url -> return $ pretty url
