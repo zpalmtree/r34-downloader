@@ -118,4 +118,5 @@ removeEscapeSequences ('%':a:b:rest) =
         _   -> '%' : a : b : removeEscapeSequences rest
     where code = a : [b]
           go c = c : removeEscapeSequences rest
+
 removeEscapeSequences (c:cs) = c : removeEscapeSequences cs
