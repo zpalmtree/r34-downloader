@@ -1,24 +1,24 @@
-module Search
+module Find
 (
-search
+find
 ) where
 
 import Control.Exception (try, SomeException)
 import Data.List (tails, stripPrefix, isPrefixOf)
-import Data.Maybe (isNothing, fromJust)
-import Data.Char (isAlphaNum, toLower)
+import Data.Maybe (fromJust)
+import Data.Char (toLower)
 import Utilities (invalidSearchTerm, openURL, noInternet, noTags,
-                    getFlagValue, searchFlags, removeEscapeSequences,
-                    isAllowedChar)
+                  removeEscapeSequences, isAllowedChar)
+import ParseArgs
+
 
 {-
 We use &mincount=1 to add the smaller tags as well as the more popular ones
 Tags have to begin with a-z A-Z or 0-9 and not be empty.
 -}
-search :: [String] -> IO ()
-search args
-    | isNothing maybeSearchTerm ||
-      not (isAllowedChar firstChar) = putStrLn invalidSearchTerm
+find :: R34 -> IO ()
+find r
+    | not (isAllowedChar firstChar) = putStrLn invalidSearchTerm
     | otherwise = do
         eitherPage <- try (openURL url) :: IO (Either SomeException String)
         case eitherPage of
@@ -28,8 +28,7 @@ search args
             case tags of
                 [] -> putStrLn noTags
                 _ -> mapM_ putStrLn tags
-    where maybeSearchTerm = getFlagValue args searchFlags
-          searchTerm = map toLower $ fromJust maybeSearchTerm
+    where searchTerm = map toLower (search r)
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
@@ -46,7 +45,7 @@ isolate page = takeWhile (/= '/') start
 myDrop :: String -> String -> String
 myDrop searchTerm soup
     | null maybeEnd = []
-    | otherwise = fromJust $ stripPrefix searchTerm $ head maybeEnd
+    | otherwise = fromJust . stripPrefix searchTerm $ head maybeEnd
     where tails' = tails soup
           maybeEnd = filter (searchTerm `isPrefixOf`) tails'
 
