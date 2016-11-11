@@ -18,22 +18,22 @@ import System.Directory (getCurrentDirectory, doesDirectoryExist)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
-import System.Environment (getArgs)
 import System.IO (hFlush, stdout)
 import Control.Concurrent.Async (async, wait)
 import Control.Exception (try, SomeException)
-import Text.Read (readMaybe)
 import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
-import Search (search)
+import Find (find)
 import Utilities
+import System.Console.CmdArgs (cmdArgs)
+import ParseArgs 
 
 main :: IO ()
 main = do
-    args <- getArgs
-    if any (`elem` helpFlags) args then help else
-        if any (`elem` searchFlags) args then search args else do
-    url <- askURL
-    dir <- getDir
+    args <- cmdArgs r34
+    if (null $ search args)
+    then do
+    url <- askURL args
+    dir <- getDir args
     firstpage <- try (openURL url) :: IO (Either SomeException String)
     case firstpage of
         Left _ -> putStrLn noInternet
@@ -44,6 +44,7 @@ main = do
             end = "</section"
         links <- takeNLinks args <$> getLinks urls
         niceDownload dir links
+    else find args
 
 type URL = String
 
@@ -72,7 +73,7 @@ from this page. wew!
 desiredLink :: String -> IO [URL]
 desiredLink redirect = do
     input <- openURL (baseURL ++ num)
-    return $ getImageLink . filter notEmpty . extract $ parseTags input
+    return . getImageLink . filter notEmpty . extract $ parseTags input
     where extract = map getText . filter (isTagOpenName "form")
           notEmpty = not . null
           baseURL = "http://rule34.paheal.net/post/view/"
@@ -96,13 +97,13 @@ From https://stackoverflow.com/questions/11514671/
      haskell-network-http-incorrectly-downloading-image/11514868
 -}
 downloadImage :: FilePath -> URL -> IO ()
-downloadImage directory url = do
+downloadImage dir url = do
     image <- get
     B.writeFile filename image
     where get = let uri = fromMaybe (error $ "Invalid URI: " ++ url)
                             (parseURI url)
                 in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
-          filename = removeEscapeSequences $ name directory url
+          filename = removeEscapeSequences $ name dir url
 
 {-
 Extract the file name of the image from the url and add it to the directory
@@ -112,20 +113,20 @@ directory path and the filename. Note that this will probably fail if the dir
 length is over 255. Not sure if filesystems even support that though.
 -}
 name :: FilePath -> URL -> FilePath
-name directory url
-    | length xs + len > maxFileNameLen = directory ++ desired
-    | otherwise = directory ++ xs
+name dir url
+    | length xs + len > maxFileNameLen = dir ++ desired
+    | otherwise = dir ++ xs
     where xs = reverse . takeWhile (/= '/') $ reverse url
           maxFileNameLen = 255
-          len = maxFileNameLen - length directory
+          len = maxFileNameLen - length dir
           desired = reverse (take len (reverse xs))
 
 --Gets the last page available so we get every link from 1 to last page
 getPageNum :: [[(a, String)]] -> Int
 getPageNum xs
     | length xs <= 2 = 1 --only one page long - will error on !!
-    | otherwise = read $ reverse $ takeWhile isNumber $ reverse desired
-    where desired = snd $ last $ xs !! 2
+    | otherwise = read . reverse . takeWhile isNumber $ reverse desired
+    where desired = snd . last $ xs !! 2
 
 {-
 We use init to drop the '1' at the end of the url and replace it with 
@@ -168,17 +169,11 @@ niceDownload dir links = niceDownload' links 1
             niceDownload' rest (succ x)
             wait img
 
-askURL :: IO URL
-askURL = do
-    args <- getArgs
-    let maybeURL = getFlagValue args tagFlags
-        pretty x = addBaseAddress (filter isAllowedChar (map replaceSpace x))
-    case maybeURL of
-        Nothing -> promptTag
-        Just url -> return $ pretty url
-
-help :: IO ()
-help = putStr =<< readFile "help.txt"
+askURL :: R34 -> IO URL
+askURL r
+    | null (tag r) = promptTag
+    | otherwise = return $ pretty (tag r)
+    where pretty x = addBaseAddress (filter isAllowedChar (map replaceSpace x))
 
 promptTag :: IO String
 promptTag = do
@@ -189,27 +184,21 @@ promptTag = do
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
 noImagesExist page
-    | null $ findError $ parseTags page = False
+    | null . findError $ parseTags page = False
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
-takeNLinks :: [String] -> [URL] -> [URL]
-takeNLinks args links =
-    case maybeN of
-        Just x -> take x links
-        Nothing -> links
-    where maybeN = readMaybe =<< getFlagValue args firstFlags
+takeNLinks :: R34 -> [URL] -> [URL]
+takeNLinks r links
+    | (first r) <= 0 = links
+    | otherwise = take (first r) links
 
-getDir :: IO FilePath
-getDir = do
-    args <- getArgs
-    cwd <- addTrailingPathSeparator <$> getCurrentDirectory
-    let def = return cwd
-        maybeDir = getFlagValue args directoryFlags
-    case maybeDir of
-        Nothing -> def
-        Just dir -> do
+getDir :: R34 -> IO FilePath
+getDir r
+    | null dir = def
+    | otherwise = do
         isDir <- doesDirectoryExist dir
-        if isDir
-            then return (addTrailingPathSeparator dir)
-            else def
+        if isDir then return (a dir) else def
+    where dir = directory r
+          def = a <$> getCurrentDirectory
+          a = addTrailingPathSeparator
