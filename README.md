@@ -25,7 +25,7 @@ Usage: `./r34download -t=cute_anime_girl --first=10
 
 This will download the first 10 images from the tag cute_anime_girl, if it exists.
 
-#### -h / --help
+#### -? / --help
 Prints a help message.
 
 Usage: `./r34download --help`
