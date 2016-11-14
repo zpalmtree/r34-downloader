@@ -30,14 +30,14 @@ import ParseArgs
 main :: IO ()
 main = do
     args <- cmdArgs r34
-    if (null $ search args)
+    if null $ search args
     then do
     url <- askURL args
     dir <- getDir args
-    firstpage <- try (openURL url) :: IO (Either SomeException String)
+    firstpage <- try $ openURL url :: IO (Either SomeException String)
     case firstpage of
         Left _ -> putStrLn noInternet
-        Right val -> if noImagesExist val then putStrLn (noImages url) else do
+        Right val -> if noImagesExist val then putStrLn $ noImages url else do
         let lastpage = desiredSection start end getPageNum val
             urls = allURLs url lastpage
             start = "<section id='paginator'>"
@@ -72,7 +72,7 @@ from this page. wew!
 -}
 desiredLink :: String -> IO [URL]
 desiredLink redirect = do
-    input <- openURL (baseURL ++ num)
+    input <- openURL $ baseURL ++ num
     return . getImageLink . filter notEmpty . extract $ parseTags input
     where extract = map getText . filter (isTagOpenName "form")
           notEmpty = not . null
@@ -119,7 +119,7 @@ name dir url
     where xs = reverse . takeWhile (/= '/') $ reverse url
           maxFileNameLen = 255
           len = maxFileNameLen - length dir
-          desired = reverse (take len (reverse xs))
+          desired = reverse . take len $ reverse xs
 
 --Gets the last page available so we get every link from 1 to last page
 getPageNum :: [[(a, String)]] -> Int
@@ -150,10 +150,10 @@ getLinks (x:xs) = do
         start = "<section id='imagelist'>"
         end = "</section"
     if null links then desiredLink input else do
-    printf "%d links added to download...\n" (length links)
+    printf "%d links added to download...\n" $ length links
     delay oneSecond
     nextlinks <- getLinks xs
-    return (links ++ nextlinks)
+    return $ links ++ nextlinks
 
 --Add a delay to our download to not get rate limited
 niceDownload :: FilePath -> [URL] -> IO ()
@@ -163,17 +163,17 @@ niceDownload dir links = niceDownload' links 1
           niceDownload' [] _ = return ()
           niceDownload' (link:rest) x = do
             img <- async $ downloadImage dir link
-            printf "Downloading %d out of %d: %s\n" x num 
-                    (removeEscapeSequences link)
+            printf "Downloading %d out of %d: %s\n"
+                    x num $ removeEscapeSequences link
             delay oneSecond
-            niceDownload' rest (succ x)
+            niceDownload' rest $ succ x
             wait img
 
 askURL :: R34 -> IO URL
 askURL r
-    | null (tag r) = promptTag
-    | otherwise = return $ pretty (tag r)
-    where pretty x = addBaseAddress (filter isAllowedChar (map replaceSpace x))
+    | null $ tag r = promptTag
+    | otherwise = return . pretty $ tag r
+    where pretty = addBaseAddress . filter isAllowedChar . map replaceSpace
 
 promptTag :: IO String
 promptTag = do
@@ -190,7 +190,7 @@ noImagesExist page
 
 takeNLinks :: R34 -> [URL] -> [URL]
 takeNLinks r links
-    | (first r) <= 0 = links
+    | first r <= 0 = links
     | otherwise = take (first r) links
 
 getDir :: R34 -> IO FilePath

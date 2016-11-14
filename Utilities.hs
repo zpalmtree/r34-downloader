@@ -45,6 +45,8 @@ noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly."
 
+--makes a lot more sense for this to be an array of characters than a string
+{-# ANN allowedChars "HLint: ignore" #-}
 allowedChars :: [Char]
 allowedChars = ['_', '\'', '-', '.', ':', '@', '+'] ++ ['a'..'z'] ++
                ['A'..'Z'] ++ ['0'..'9']

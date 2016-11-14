@@ -18,17 +18,17 @@ Tags have to begin with a-z A-Z or 0-9 and not be empty.
 -}
 find :: R34 -> IO ()
 find r
-    | not (isAllowedChar firstChar) = putStrLn invalidSearchTerm
+    | not $ isAllowedChar firstChar = putStrLn invalidSearchTerm
     | otherwise = do
-        eitherPage <- try (openURL url) :: IO (Either SomeException String)
+        eitherPage <- try $ openURL url :: IO (Either SomeException String)
         case eitherPage of
             Left _ -> putStrLn noInternet
             Right page -> do
-            let tags = filter (searchTerm `isPrefixOf`) (getTags page)
+            let tags = filter (searchTerm `isPrefixOf`) $ getTags page
             case tags of
                 [] -> putStrLn noTags
                 _ -> mapM_ putStrLn tags
-    where searchTerm = map toLower (search r)
+    where searchTerm = map toLower $ search r
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
@@ -55,4 +55,4 @@ We also lower case it all so case sensitivity in searching is no issue
 -}
 getTags :: String -> [String]
 getTags soup = map (map toLower . removeEscapeSequences . isolate) tagLines
-    where tagLines = filter (isPrefixOf "&nbsp;") (lines soup)
+    where tagLines = filter (isPrefixOf "&nbsp;") $ lines soup
