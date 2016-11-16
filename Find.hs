@@ -54,5 +54,5 @@ All lines containing a tag are prefixed with the below magic string
 We also lower case it all so case sensitivity in searching is no issue
 -}
 getTags :: String -> [String]
-getTags soup = map (map toLower . removeEscapeSequences . isolate) tagLines
-    where tagLines = filter (isPrefixOf "&nbsp;") $ lines soup
+getTags soup = [f x | x <- lines soup, "&nbsp;" `isPrefixOf` x]
+    where f = map toLower . removeEscapeSequences . isolate

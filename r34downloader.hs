@@ -134,9 +134,7 @@ the current page number. It's easier to remove it here than to add it in
 a few other places
 -}
 allURLs :: URL -> Int -> [URL]
-allURLs url lastpage = map (addPageNum baseURL) [1..lastpage]
-    where addPageNum xs n = xs ++ show n
-          baseURL = init url
+allURLs url lastpage = [init url ++ show x | x <- [1..lastpage]]
 
 {-
 Gets all the image links so we can download them, once every second so
