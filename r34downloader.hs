@@ -19,13 +19,13 @@ import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.IO (hFlush, stdout)
-import Control.Concurrent.Async (async, wait)
 import Control.Exception (try, SomeException)
 import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
 import Find (find)
 import Utilities
 import System.Console.CmdArgs (cmdArgs)
 import ParseArgs 
+import Control.Concurrent
 
 main :: IO ()
 main = do
@@ -160,12 +160,11 @@ niceDownload dir links = niceDownload' links 1
           niceDownload' :: [URL] -> Int -> IO () 
           niceDownload' [] _ = return ()
           niceDownload' (link:rest) x = do
-            img <- async $ downloadImage dir link
+            forkIO (downloadImage dir link)
             printf "Downloading %d out of %d: %s\n"
                     x num $ removeEscapeSequences link
             delay oneSecond
             niceDownload' rest $ succ x
-            wait img
 
 askURL :: R34 -> IO URL
 askURL r
