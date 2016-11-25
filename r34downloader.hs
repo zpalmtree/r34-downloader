@@ -11,7 +11,7 @@
 import Network.HTTP (getResponseBody, simpleHTTP, getResponseBody,
                         defaultGETRequest_)
 import Network.URI (parseURI)
-import Text.HTML.TagSoup
+import Text.HTML.TagSoup (Attribute, Tag(..), parseTags, (~/=), isTagOpenName)
 import qualified Data.ByteString as B (writeFile)
 import Data.Maybe (fromMaybe)
 import System.Directory (getCurrentDirectory, doesDirectoryExist)
@@ -21,19 +21,21 @@ import Text.Printf (printf)
 import System.IO (hFlush, stdout)
 import Control.Exception (try, SomeException)
 import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
-import Find (find)
-import Utilities
 import System.Console.CmdArgs (cmdArgs)
-import ParseArgs 
-import Control.Concurrent
+import Control.Concurrent (forkIO)
+import ParseArgs (R34(..), r34)
+import Utilities
+import Find (find)
+
+type URL = String
 
 main :: IO ()
 main = do
     args <- cmdArgs r34
     if null $ search args
     then do
-    url <- askURL args
-    dir <- getDir args
+    url <- askURL (tag args)
+    dir <- getDir (directory args)
     firstpage <- try $ openURL url :: IO (Either SomeException String)
     case firstpage of
         Left _ -> putStrLn noInternet
@@ -45,8 +47,6 @@ main = do
         links <- takeNLinks args <$> getLinks urls
         niceDownload dir links
     else find args
-
-type URL = String
 
 {-
 Start is the tag you want to find the links in, End is the closing tag,
@@ -136,10 +136,6 @@ a few other places
 allURLs :: URL -> Int -> [URL]
 allURLs url lastpage = [init url ++ show x | x <- [1..lastpage]]
 
-{-
-Gets all the image links so we can download them, once every second so
-website doesn't block us
--}
 getLinks :: [URL] -> IO [URL]
 getLinks [] = return []
 getLinks (x:xs) = do
@@ -153,7 +149,7 @@ getLinks (x:xs) = do
     nextlinks <- getLinks xs
     return $ links ++ nextlinks
 
---Add a delay to our download to not get rate limited
+--Add a delay to our download to respect robots.txt
 niceDownload :: FilePath -> [URL] -> IO ()
 niceDownload dir links = niceDownload' links 1
     where num = length links
@@ -166,10 +162,10 @@ niceDownload dir links = niceDownload' links 1
             delay oneSecond
             niceDownload' rest $ succ x
 
-askURL :: R34 -> IO URL
-askURL r
-    | null $ tag r = promptTag
-    | otherwise = return . pretty $ tag r
+askURL :: String -> IO URL
+askURL tag'
+    | null tag' = promptTag
+    | otherwise = return $ pretty tag'
     where pretty = addBaseAddress . filter isAllowedChar . map replaceSpace
 
 promptTag :: IO String
@@ -190,12 +186,10 @@ takeNLinks r links
     | first r <= 0 = links
     | otherwise = take (first r) links
 
-getDir :: R34 -> IO FilePath
-getDir r
-    | null dir = def
-    | otherwise = do
-        isDir <- doesDirectoryExist dir
-        if isDir then return (a dir) else def
-    where dir = directory r
-          def = a <$> getCurrentDirectory
-          a = addTrailingPathSeparator
+getDir :: FilePath -> IO FilePath
+getDir dir = do
+    isDir <- doesDirectoryExist dir
+    if isDir
+        then return $ a dir
+        else a <$> getCurrentDirectory
+    where a = addTrailingPathSeparator
