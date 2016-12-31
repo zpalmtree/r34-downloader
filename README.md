@@ -14,14 +14,14 @@ The program does support async IO, so a slow network connection will affect the 
 #### -t / --tag
 Specify a tag to download on the command line.
 
-Usage: `./r34downloader --tag=cute_anime_girl
+Usage: `./r34downloader --tag=cute_anime_girl`
 
 This will download all images with the tag cute_anime_girl.
 
 #### -f / --first
 Specify the amount of images to download. Input should be a positive number.
 
-Usage: `./r34download -t=cute_anime_girl --first=10
+Usage: `./r34download -t=cute_anime_girl --first=10`
 
 This will download the first 10 images from the tag cute_anime_girl, if it exists.
 
@@ -36,7 +36,7 @@ This will output help on how to use the program.
 Lets you select the directory to download the images to. The directory must exist.
 If the directory does not exist, the program will fall back to the current working directory.
 
-Usage: `./r34downloader -t=cute_anime_girl --directory=/media/Pictures
+Usage: `./r34downloader -t=cute_anime_girl --directory=/media/Pictures`
 
 This will download all images with the tag cute_anime_girl to the directory /media/Pictures, if it exists.
 
@@ -45,7 +45,7 @@ If the directory does not exist, it will fall back to the current directory.
 #### -s / --search
 Lets you search for a tag if you don't know if it exists/the full name.
 
-Usage: `./r34downloader --search=cute
+Usage: `./r34downloader --search=cute`
 
 If a tag "cute_anime_girl" existed, it would be printed to the console, along with any other tags beginning with "cute".
 Tag search is not case sensitive, so "cute", would also find tags beginning with "Cute", for example.
