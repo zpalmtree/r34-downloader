@@ -1,16 +1,18 @@
 module Utilities
-( noInternet
-, noTags
-, openURL
-, invalidSearchTerm
-, filetypes
-, oneSecond
-, noImages
-, addBaseAddress
-, isAllowedChar
-, replaceSpace
-, removeEscapeSequences
-) where
+(
+    noInternet,
+    noTags,
+    openURL,
+    invalidSearchTerm,
+    filetypes,
+    oneSecond,
+    noImages,
+    addBaseAddress,
+    isAllowedChar,
+    replaceSpace,
+    removeEscapeSequences
+)
+where
 
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
 import Text.Printf (printf)
@@ -46,6 +48,7 @@ noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly."
 
 --makes a lot more sense for this to be an array of characters than a string
+--comment for hlint, style checker
 {-# ANN allowedChars "HLint: ignore" #-}
 allowedChars :: [Char]
 allowedChars = ['_', '\'', '-', '.', ':', '@', '+'] ++ ['a'..'z'] ++

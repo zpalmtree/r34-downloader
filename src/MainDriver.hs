@@ -1,12 +1,17 @@
-{-# OPTIONS_GHC -O2
-    -rtsopts
-    -Wall
-    -fno-warn-unused-do-bind
-    -fno-warn-type-defaults
-    -fexcess-precision
-    -optc-O3
-    -optc-ffast-math
-    -fforce-recomp #-}
+module MainDriver
+(
+    askURL,
+    getDir,
+    openURL,
+    noImagesExist,
+    desiredSection,
+    getPageNum,
+    allURLs,
+    takeNLinks,
+    getLinks,
+    niceDownload
+)
+where
 
 import Network.HTTP (getResponseBody, simpleHTTP, getResponseBody,
                         defaultGETRequest_)
@@ -19,34 +24,17 @@ import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.IO (hFlush, stdout)
-import Control.Exception (try, SomeException)
 import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
-import System.Console.CmdArgs (cmdArgs)
 import Control.Concurrent (forkIO)
-import ParseArgs (R34(..), r34)
+import ParseArgs (R34(..))
 import Utilities
-import Find (find)
 
 type URL = String
 
-main :: IO ()
-main = do
-    args <- cmdArgs r34
-    if null $ search args
-    then do
-    url <- askURL (tag args)
-    dir <- getDir (directory args)
-    firstpage <- try $ openURL url :: IO (Either SomeException String)
-    case firstpage of
-        Left _ -> putStrLn noInternet
-        Right val -> if noImagesExist val then putStrLn $ noImages url else do
-        let lastpage = desiredSection start end getPageNum val
-            urls = allURLs url lastpage
-            start = "<section id='paginator'>"
-            end = "</section"
-        links <- takeNLinks args <$> getLinks urls
-        niceDownload dir links
-    else find args
+{-
+Both r34MainCMD.hs and r34MainGUI.hs interface with this module mainly, with
+custom main functions, hence, it drives their main function.
+-}
 
 {-
 Start is the tag you want to find the links in, End is the closing tag,

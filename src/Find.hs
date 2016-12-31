@@ -1,7 +1,8 @@
 module Find
 (
-find
-) where
+    find
+)
+where
 
 import Control.Exception (try, SomeException)
 import Data.List (tails, stripPrefix, isPrefixOf)
@@ -34,7 +35,7 @@ find r
           url = baseURL ++ [firstChar] ++ "&mincount=1"
 
 {-
-list/ is immediatly before the tag name in the string we extracted earlier
+list/ is immediately before the tag name in the string we extracted earlier
 then we take until the next / which terminates the tag
 -}
 isolate :: String -> String
