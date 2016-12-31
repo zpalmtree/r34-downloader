@@ -21,10 +21,10 @@ find searchTerm'
         case eitherPage of
             Left _ -> return $ Left noInternet
             Right page -> do
-            let tags = filter (searchTerm `isPrefixOf`) $ getTags page
-            case tags of
-                [] -> return $ Left noTags
-                _ -> return $ Right tags
+                let tags = filter (searchTerm `isPrefixOf`) $ getTags page
+                case tags of
+                    [] -> return $ Left noTags
+                    _ -> return $ Right tags
     where searchTerm = map toLower searchTerm'
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="

@@ -131,11 +131,13 @@ getLinks (x:xs) = do
     let links = desiredSection start end getImageLink input
         start = "<section id='imagelist'>"
         end = "</section"
-    if null links then desiredLink input else do
-    printf "%d links added to download...\n" $ length links
-    delay oneSecond
-    nextlinks <- getLinks xs
-    return $ links ++ nextlinks
+    if null links
+        then desiredLink input
+        else do
+            printf "%d links added to download...\n" $ length links
+            delay oneSecond
+            nextlinks <- getLinks xs
+            return $ links ++ nextlinks
 
 --Add a delay to our download to respect robots.txt
 niceDownload :: FilePath -> [URL] -> IO ()
