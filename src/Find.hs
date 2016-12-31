@@ -10,26 +10,22 @@ import Data.Maybe (fromJust)
 import Data.Char (toLower)
 import Utilities (invalidSearchTerm, openURL, noInternet, noTags,
                   removeEscapeSequences, isAllowedChar)
-import ParseArgs
 
-
-{-
-We use &mincount=1 to add the smaller tags as well as the more popular ones
-Tags have to begin with a-z A-Z or 0-9 and not be empty.
--}
-find :: R34 -> IO ()
-find r
-    | not $ isAllowedChar firstChar = putStrLn invalidSearchTerm
+--We use &mincount=1 to add the smaller tags as well as the more popular ones
+find :: String -> IO (Either String [String])
+find searchTerm'
+    -- maybe handle this on GUI side? don't allow invalid input/check before
+    | not $ isAllowedChar firstChar = return $ Left invalidSearchTerm
     | otherwise = do
         eitherPage <- try $ openURL url :: IO (Either SomeException String)
         case eitherPage of
-            Left _ -> putStrLn noInternet
+            Left _ -> return $ Left noInternet
             Right page -> do
             let tags = filter (searchTerm `isPrefixOf`) $ getTags page
             case tags of
-                [] -> putStrLn noTags
-                _ -> mapM_ putStrLn tags
-    where searchTerm = map toLower $ search r
+                [] -> return $ Left noTags
+                _ -> return $ Right tags
+    where searchTerm = map toLower searchTerm'
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
