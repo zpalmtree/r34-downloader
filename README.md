@@ -33,7 +33,10 @@ Note that cabal is a bit finnicky, if it fails on any of the above modules, try 
 
 This will install the programs in ~/.cabal/bin
 
-If you add this line to your ~/.profile `PATH=$PATH:~/.cabal/bin` you will be able to run the programs from any bash shell.
+If you add this line to your ~/.profile
+`PATH=$PATH:~/.cabal/bin`
+you will be able to run the programs from any bash shell.
+
 Otherwise, you will have to invoke them with ~/.cabal/bin/r34Downloader
 
 #### Running the program
@@ -43,7 +46,7 @@ Run
 
 Note that the GUI version of the program is non-functional at the moment. It is currently being build.
 
-in the directory you wish to run the program. See the flags section to customize how you use the CMD version of the program.
+See the flags section to customize how you use the CMD version of the program.
 
 ## Flags:
 
