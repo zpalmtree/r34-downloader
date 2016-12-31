@@ -99,9 +99,10 @@
             <property name="can_focus">False</property>
             <property name="column_homogeneous">True</property>
             <child>
-              <object class="GtkFileChooserButton" id="filePickerButton">
+              <object class="GtkFileChooserButton" id="folderPickerButton">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="action">select-folder</property>
                 <property name="title" translatable="yes"/>
               </object>
               <packing>
@@ -166,7 +167,7 @@
         </child>
       </object>
     </child>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
   </object>
