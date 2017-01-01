@@ -10,7 +10,8 @@ module Utilities
     addBaseAddress,
     isAllowedChar,
     replaceSpace,
-    removeEscapeSequences
+    removeEscapeSequences,
+    emptySearch
 )
 where
 
@@ -29,6 +30,9 @@ noTags = "No tag found with that search term, please try again."
 invalidSearchTerm :: String
 invalidSearchTerm = "No search term entered, or invalid search term entered\
                     \ , exiting."
+
+emptySearch :: String
+emptySearch = "No tag entered. Please enter one before searching."
 
 filetypes :: [String]
 filetypes = [".jpg", ".png", ".gif", ".jpeg"]
