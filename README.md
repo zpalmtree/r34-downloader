@@ -5,35 +5,19 @@ Comes with both a GUI and a CMD version.
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
-The program does support async IO, so a slow network connection will affect the speed as little as possible, a download should being roughly every second.
-
 ## Installation:
 
 #### Clone the repository
 `git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
 
-#### Install dependencies
-You will need a couple of dependencies. Ensure you have the haskell platform including cabal installed.
-This should be installed from your repositories if available. 
-
-`cabal install concurrent-extra tagsoup http async gtk3 glib`
-
-Note that cabal is a bit finnicky, if it fails on any of the above modules, try running cabal install failed_module on its own, so if tagsoup for example failed to install, rerun
-
-`cabal install tagsoup`
-
 #### Compile
 `cd src`
-
-`cabal configure`
-
-`cabal build`
 
 `cabal install`
 
 This will install the programs in ~/.cabal/bin
 
-If you add this line to your ~/.profile
+If you add this line to your ~/.profile:
 `PATH=$PATH:~/.cabal/bin`
 you will be able to run the programs from any bash shell.
 
@@ -43,8 +27,6 @@ Otherwise, you will have to invoke them with ~/.cabal/bin/r34Downloader
 Run
 
 `r34Downloader` or `r34DownloaderGUI`
-
-Note that the GUI version of the program is non-functional at the moment. It is currently being build.
 
 See the flags section to customize how you use the CMD version of the program.
 
@@ -93,6 +75,6 @@ Tag search is not case sensitive, so "cute", would also find tags beginning with
 #### Windows installation
 The setup is the same on windows, I have tried it using a cywgin terminal and it works fine, I have not tried using windows cmd, but I have no reason to believe it would be any different.
 
-GUI setup has not been tested and probably won't work. I will work on it once the GUI is finished.
+GUI setup has not been tested and probably won't work. It will be looked at soon.
 
 Get the haskell platform here: https://www.haskell.org/platform/#windows

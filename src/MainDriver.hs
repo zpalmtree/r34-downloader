@@ -25,21 +25,19 @@ import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.IO (hFlush, stdout)
 import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
-import Control.Concurrent (forkIO)
+import Control.Concurrent (MVar, forkIO, newEmptyMVar, takeMVar, putMVar)
+import Control.Monad (replicateM)
 import ParseArgs (R34(..))
-import Utilities
+import Utilities (zipWithM3_, openURL, filetypes, removeEscapeSequences,
+                  oneSecond, addBaseAddress, isAllowedChar, replaceSpace)
 
 type URL = String
 
-{-
-Both r34MainCMD.hs and r34MainGUI.hs interface with this module mainly, with
-custom main functions, hence, it drives their main function.
--}
+{- Both r34MainCMD.hs and r34MainGUI.hs interface with this module mainly, with
+custom main functions, hence, it drives their main function. -}
 
-{-
-Start is the tag you want to find the links in, End is the closing tag,
-the function is for specifying what to get once the links have been isolated
--}
+{- Start is the tag you want to find the links in, End is the closing tag,
+the function is for specifying what to get once the links have been isolated -}
 desiredSection :: String -> String -> ([[Attribute String]] -> a)
                     -> String -> a
 desiredSection start end f page = fromMain $ parseTags page
@@ -50,14 +48,12 @@ getText :: Tag t -> [Attribute t]
 getText (TagOpen _ stuff) = stuff
 getText _ = error "Only use with a TagOpen."
 
-{-
-If there is only one image for a tag, we get redirected to the image itself
+{- If there is only one image for a tag, we get redirected to the image itself
 We then need to extract the hyperlink for the image in a slightly different 
 way, hence this function. redirect is the bit of text we downloaded previously
 which tells us the url of the page containing the desired image, we extract the
 number and stick it onto the base url, download it, then extract the full image 
-from this page. wew!
--}
+from this page. wew! -}
 desiredLink :: String -> IO [URL]
 desiredLink redirect = do
     input <- openURL $ baseURL ++ num
@@ -67,10 +63,8 @@ desiredLink redirect = do
           baseURL = "http://rule34.paheal.net/post/view/"
           num = takeWhile isNumber $ dropWhile (not . isNumber) redirect
 
-{-
-Hyperlinks all start with the "a" identifier, this means we will get less crud
-or have less filtering to do later
--}
+{- Hyperlinks all start with the "a" identifier, this means we will get less crud
+or have less filtering to do later -}
 getHyperLinks :: [Tag String] -> [[Attribute String]]
 getHyperLinks = map getText . filter (isTagOpenName "a")
 
@@ -80,10 +74,8 @@ getImageLink xs = filter isImage links
     where links = map (snd . last) xs
           isImage x = takeExtension x `elem` filetypes
 
-{-
-From https://stackoverflow.com/questions/11514671/
-     haskell-network-http-incorrectly-downloading-image/11514868
--}
+{- From https://stackoverflow.com/questions/11514671/
+     haskell-network-http-incorrectly-downloading-image/11514868 -}
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = do
     image <- get
@@ -93,13 +85,11 @@ downloadImage dir url = do
                 in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
           filename = removeEscapeSequences $ name dir url
 
-{-
-Extract the file name of the image from the url and add it to the directory
+{- Extract the file name of the image from the url and add it to the directory
 path so we can rename files. We truncate to 255 characters because
 openBinaryFile errors on a filename length over 256. We ensure we retain the 
 directory path and the filename. Note that this will probably fail if the dir
-length is over 255. Not sure if filesystems even support that though.
--}
+length is over 255. Not sure if filesystems even support that though. -}
 name :: FilePath -> URL -> FilePath
 name dir url
     | length xs + len > maxFileNameLen = dir ++ desired
@@ -116,17 +106,15 @@ getPageNum xs
     | otherwise = read . reverse . takeWhile isNumber $ reverse desired
     where desired = snd . last $ xs !! 2
 
-{-
-We use init to drop the '1' at the end of the url and replace it with 
+{- I use init to drop the '1' at the end of the url and replace it with 
 the current page number. It's easier to remove it here than to add it in
-a few other places
--}
+a few other places -}
 allURLs :: URL -> Int -> [URL]
 allURLs url lastpage = [init url ++ show x | x <- [1..lastpage]]
 
-getLinks :: [URL] -> IO [URL]
-getLinks [] = return []
-getLinks (x:xs) = do
+getLinks :: [URL] -> (String -> IO ()) -> IO [URL]
+getLinks [] _ = return []
+getLinks (x:xs) logger = do
     input <- openURL x 
     let links = desiredSection start end getImageLink input
         start = "<section id='imagelist'>"
@@ -134,23 +122,28 @@ getLinks (x:xs) = do
     if null links
         then desiredLink input
         else do
-            printf "%d links added to download...\n" $ length links
+            logger . printf "%d links added to download...\n" $ length links
             delay oneSecond
-            nextlinks <- getLinks xs
+            nextlinks <- getLinks xs logger
             return $ links ++ nextlinks
 
---Add a delay to our download to respect robots.txt
-niceDownload :: FilePath -> [URL] -> IO ()
-niceDownload dir links = niceDownload' links 1
+{- Need to wait for all the file downloads to complete before returning,
+else the GUI will display "done" while the program is still downloading, and
+thus the user may close the program before all downloads are completed.
+Nicedownload adds a delay to the downloading to respect the robots.txt of
+the site. -}
+niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> IO ()
+niceDownload dir links logger = do
+    mvars <- replicateM num newEmptyMVar
+    forkIO $ zipWithM3_ niceDownload' links [1..] mvars
+    mapM_ takeMVar mvars
     where num = length links
-          niceDownload' :: [URL] -> Int -> IO () 
-          niceDownload' [] _ = return ()
-          niceDownload' (link:rest) x = do
-            forkIO (downloadImage dir link)
-            printf "Downloading %d out of %d: %s\n"
+          niceDownload' :: URL -> Int -> MVar () -> IO () 
+          niceDownload' link x m = do
+            logger . printf "Downloading %d out of %d: %s\n"
                     x num $ removeEscapeSequences link
+            forkIO (downloadImage dir link >> putMVar m ())
             delay oneSecond
-            niceDownload' rest $ succ x
 
 askURL :: String -> IO URL
 askURL tag'

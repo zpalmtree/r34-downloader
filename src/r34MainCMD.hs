@@ -1,13 +1,3 @@
-{-# OPTIONS_GHC -O2
-    -rtsopts
-    -Wall
-    -fno-warn-unused-do-bind
-    -fno-warn-type-defaults
-    -fexcess-precision
-    -optc-O3
-    -optc-ffast-math
-    -fforce-recomp #-}
-
 import Control.Exception (SomeException, try)
 import System.Console.CmdArgs (cmdArgs)
 import Data.Either (either)
@@ -35,8 +25,8 @@ main = do
                     urls = allURLs url lastpage
                     start = "<section id='paginator'>"
                     end = "</section"
-                links <- takeNLinks args <$> getLinks urls
-                niceDownload dir links
+                links <- takeNLinks args <$> getLinks urls putStr
+                niceDownload dir links putStr
     else do
         eitherResult <- find (search args)
         either putStrLn (mapM_ putStrLn) eitherResult

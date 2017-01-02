@@ -11,14 +11,28 @@ module Utilities
     isAllowedChar,
     replaceSpace,
     removeEscapeSequences,
-    emptySearch
+    emptySearch,
+    emptyTag,
+    noImagesGUI,
+    permissionError,
+    zipWithM3_
 )
 where
 
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
 import Text.Printf (printf)
+import Data.Foldable (sequenceA_)
 
 type URL = String
+
+emptyTag :: String
+emptyTag = "No tag selected. Please select one before downloading."
+
+noImagesGUI :: String
+noImagesGUI = "No images were found with that tag. This is an error which occurs when a tag exists, but its images have been removed from the site."
+
+permissionError :: String
+permissionError = "You don't have permission to save files to the selected folder. Try running the program again with admin privileges, if this does not rectify the problem, chose another folder."
 
 noInternet :: String 
 noInternet = "Sorry, we couldn't connect to the website. Check that it's not \
@@ -51,8 +65,8 @@ noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
             \Ensure you spelt it correctly."
 
---makes a lot more sense for this to be an array of characters than a string
 --comment for hlint, style checker
+--makes a lot more sense for this to be an array of characters than a string
 {-# ANN allowedChars "HLint: ignore" #-}
 allowedChars :: [Char]
 allowedChars = ['_', '\'', '-', '.', ':', '@', '+'] ++ ['a'..'z'] ++
@@ -94,3 +108,7 @@ removeEscapeSequences ('%':a:b:rest) =
           go c = c : removeEscapeSequences rest
 
 removeEscapeSequences (c:cs) = c : removeEscapeSequences cs
+
+zipWithM3_ :: (Applicative m) => 
+              (a -> b -> c -> m d) -> [a] -> [b] -> [c] -> m ()
+zipWithM3_ f xs ys zs = sequenceA_ (zipWith3 f xs ys zs)
