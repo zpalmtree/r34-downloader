@@ -26,7 +26,8 @@ import Graphics.UI.Gtk.Selectors.FileChooser (fileChooserSelectFilename,
                                               fileChooserGetFilename)
 import System.Glib.Signals (on)
 import Data.Text (Text, pack, unpack)
-import Control.Concurrent (killThread, forkIO)
+import Control.Concurrent (killThread, forkIO, newMVar, takeMVar, MVar,
+                           ThreadId)
 import Control.Exception (SomeException, try)
 import Control.Monad (void)
 import System.Directory (getCurrentDirectory, getPermissions, writable)
@@ -77,8 +78,9 @@ downloadGUI builder mainWindow = do
         Just tag -> cancelableAction mainWindow "Downloading..." "Done!"
                     (download builder (unpack tag))
 
-search :: Builder -> String -> MessageDialog -> IO (Maybe String)
-search builder entry _ = do
+search :: Builder -> String -> MessageDialog -> MVar [ThreadId]
+          -> IO (Maybe String)
+search builder entry _ _ = do
     eitherResults <- find entry
     case eitherResults of
         Left msg -> return $ Just msg
@@ -86,8 +88,9 @@ search builder entry _ = do
             postGUIAsync $ updateResultsBox builder (map pack results)
             return Nothing
 
-download :: Builder -> String -> MessageDialog -> IO (Maybe String)
-download builder tag dialog = do
+download :: Builder -> String -> MessageDialog -> MVar [ThreadId]
+            -> IO (Maybe String)
+download builder tag dialog threads = do
     filePicker <- builderGetObject builder castToFileChooser "folderPicker"
     Just dir <- fmap (++ "/") <$> fileChooserGetFilename filePicker
     permissions <- getPermissions dir
@@ -108,7 +111,7 @@ download builder tag dialog = do
                     end = "</section"
 
                 links <- getLinks urls (guiLogger dialog)
-                niceDownload dir links (guiLogger dialog)
+                niceDownload dir links (guiLogger dialog) threads
                 return Nothing
 
         else return $ Just permissionError
@@ -125,10 +128,12 @@ happen if this occurs, maybe a crash, or maybe the signal won't be
 recognised yet so the dialog will persist despite the operation having
 completed. -}
 cancelableAction :: Window -> String -> String ->
-                    (MessageDialog -> IO (Maybe String)) -> IO ()
+                    (MessageDialog -> MVar [ThreadId] ->
+                    IO (Maybe String)) -> IO ()
 cancelableAction mainWindow initMsg completionMsg func = do
+    threads <- newMVar []
     dialog <- newDialog mainWindow ButtonsCancel initMsg
-    childThread <- forkIO $ childTasks dialog
+    childThread <- forkIO $ childTasks dialog threads
     response <- dialogRun dialog
     widgetDestroy dialog
     case response of
@@ -140,10 +145,13 @@ cancelableAction mainWindow initMsg completionMsg func = do
         ResponseNo -> return ()
 
         --cancel or window closed
-        _ -> killThread childThread
+        _ -> do
+            runningThreads <- takeMVar threads
+            mapM_ killThread runningThreads
+            killThread childThread
 
-    where childTasks dialog = do
-                maybeErr <- func dialog
+    where childTasks dialog threads = do
+                maybeErr <- func dialog threads
                 case maybeErr of
                     Nothing -> postGUIAsync $ dialogResponse dialog ResponseOk
                     Just errMsg -> do

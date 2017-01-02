@@ -14,7 +14,6 @@ import Utilities (invalidSearchTerm, openURL, noInternet, noTags,
 --We use &mincount=1 to add the smaller tags as well as the more popular ones
 find :: String -> IO (Either String [String])
 find searchTerm'
-    -- maybe handle this on GUI side? don't allow invalid input/check before
     | not $ isAllowedChar firstChar = return $ Left invalidSearchTerm
     | otherwise = do
         eitherPage <- try $ openURL url :: IO (Either SomeException String)
@@ -30,10 +29,8 @@ find searchTerm'
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
 
-{-
-list/ is immediately before the tag name in the string we extracted earlier
-then we take until the next / which terminates the tag
--}
+{- list/ is immediately before the tag name in the string we extracted earlier
+then we take until the next / which terminates the tag -}
 isolate :: String -> String
 isolate page = takeWhile (/= '/') start
     where start = myDrop "list/" page
@@ -46,10 +43,8 @@ myDrop searchTerm soup
     where tails' = tails soup
           maybeEnd = filter (searchTerm `isPrefixOf`) tails'
 
-{-
-All lines containing a tag are prefixed with the below magic string
-We also lower case it all so case sensitivity in searching is no issue
--}
+{- All lines containing a tag are prefixed with the below magic string
+We also lower case it all so case sensitivity in searching is no issue -}
 getTags :: String -> [String]
 getTags soup = [f x | x <- lines soup, "&nbsp;" `isPrefixOf` x]
     where f = map toLower . removeEscapeSequences . isolate

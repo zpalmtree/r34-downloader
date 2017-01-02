@@ -5,8 +5,7 @@ Comes with both a GUI and a CMD version.
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
-Current Issues: Cancel button for downloading doesn't work correctly. Because the childthread that does the downloading launches childthreads itself, when the original child is killed, the ones downloading keep running. The dialog disappears, but the downloading continues.
-
+Current Issues: If you enter a search term with a large amount of results, the GUI performance tanks. For example, searching "a" will make the program awfully slow, maxing out a whole core.
 ## Installation:
 
 #### Clone the repository

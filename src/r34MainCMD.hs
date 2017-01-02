@@ -1,6 +1,7 @@
 import Control.Exception (SomeException, try)
 import System.Console.CmdArgs (cmdArgs)
 import Data.Either (either)
+import Control.Concurrent (newMVar)
 import ParseArgs (R34(..), r34)
 import MainDriver (askURL, getDir, openURL, noImagesExist, desiredSection,
                    getPageNum, getPageNum, allURLs, takeNLinks, getLinks,
@@ -26,7 +27,12 @@ main = do
                     start = "<section id='paginator'>"
                     end = "</section"
                 links <- takeNLinks args <$> getLinks urls putStr
-                niceDownload dir links putStr
+                threads <- newMVar []
+                {- don't actually need to do anything with the child threads,
+                as the only way a user can cancel the download is with ctrl+c/
+                similar method which kills the entire program. The haskell
+                runtime kills all threads upon the mainthread dying. -}
+                niceDownload dir links putStr threads
     else do
         eitherResult <- find (search args)
         either putStrLn (mapM_ putStrLn) eitherResult

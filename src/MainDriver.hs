@@ -25,7 +25,8 @@ import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
 import System.IO (hFlush, stdout)
 import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
-import Control.Concurrent (MVar, forkIO, newEmptyMVar, takeMVar, putMVar)
+import Control.Concurrent (MVar, forkIO, newEmptyMVar, takeMVar, putMVar,
+                           ThreadId, modifyMVar_)
 import Control.Monad (replicateM)
 import ParseArgs (R34(..))
 import Utilities (zipWithM3_, openURL, filetypes, removeEscapeSequences,
@@ -132,17 +133,19 @@ else the GUI will display "done" while the program is still downloading, and
 thus the user may close the program before all downloads are completed.
 Nicedownload adds a delay to the downloading to respect the robots.txt of
 the site. -}
-niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> IO ()
-niceDownload dir links logger = do
+niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> MVar [ThreadId]
+                -> IO ()
+niceDownload dir links logger threads = do
     mvars <- replicateM num newEmptyMVar
     forkIO $ zipWithM3_ niceDownload' links [1..] mvars
     mapM_ takeMVar mvars
     where num = length links
           niceDownload' :: URL -> Int -> MVar () -> IO () 
           niceDownload' link x m = do
+            child <- forkIO (downloadImage dir link >> putMVar m ())
+            modifyMVar_ threads (\t -> return $ child : t)
             logger . printf "Downloading %d out of %d: %s\n"
                     x num $ removeEscapeSequences link
-            forkIO (downloadImage dir link >> putMVar m ())
             delay oneSecond
 
 askURL :: String -> IO URL
