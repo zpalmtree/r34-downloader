@@ -6,8 +6,7 @@ import Graphics.UI.Gtk.General.General (initGUI, mainQuit, mainGUI,
 import Graphics.UI.Gtk.Builder (builderAddFromFile, builderNew,
                                 builderGetObject, Builder)
 import Graphics.UI.Gtk.Abstract.Object (objectDestroy)
-import Graphics.UI.Gtk.Windows.Window (castToWindow, windowDefaultWidth,
-                                       Window)
+import Graphics.UI.Gtk.Windows.Window (Window, castToWindow)
 import Graphics.UI.Gtk.Buttons.Button (castToButton, buttonActivated)
 import Graphics.UI.Gtk.Entry.Entry (castToEntry, entryGetText)
 import Graphics.UI.Gtk.MenuComboToolbar.ComboBox (castToComboBox,
@@ -26,7 +25,6 @@ import Graphics.UI.Gtk.Selectors.FileChooser (fileChooserSelectFilename,
                                               castToFileChooser,
                                               fileChooserGetFilename)
 import System.Glib.Signals (on)
-import System.Glib.Attributes (set, AttrOp((:=)))
 import Data.Text (Text, pack, unpack)
 import Control.Concurrent (killThread, forkIO)
 import Control.Exception (SomeException, try)
@@ -49,9 +47,6 @@ main = do
     searchButton <- builderGetObject builder castToButton "searchButton"
     downloadButton <- builderGetObject builder castToButton "downloadButton"
     filePicker <- builderGetObject builder castToFileChooser "folderPicker"
-
-    --need enough room for the title
-    set mainWindow [ windowDefaultWidth := 220 ]
 
     cwd <- getCurrentDirectory
     void $ fileChooserSelectFilename filePicker cwd

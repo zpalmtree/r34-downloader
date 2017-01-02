@@ -5,6 +5,8 @@ Comes with both a GUI and a CMD version.
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
+Current Issues: Cancel button for downloading doesn't work correctly. Because the childthread that does the downloading launches childthreads itself, when the original child is killed, the ones downloading keep running. The dialog disappears, but the downloading continues.
+
 ## Installation:
 
 #### Clone the repository
