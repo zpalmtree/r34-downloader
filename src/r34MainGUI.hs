@@ -31,9 +31,11 @@ import Control.Concurrent (killThread, forkIO, newMVar, takeMVar, MVar,
 import Control.Exception (SomeException, try)
 import Control.Monad (void)
 import System.Directory (getCurrentDirectory, getPermissions, writable)
+import Paths_rule34_paheal_downloader (getDataFileName)
 import Find (find)
 import Utilities (emptySearch, emptyTag, openURL, noInternet, noImagesGUI,
-                  addBaseAddress, permissionError)
+                  addBaseAddress, permissionError, maxComboBoxSize,
+                  tooManyResults)
 import MainDriver (noImagesExist, desiredSection, getPageNum, allURLs,
                    getLinks, niceDownload)
 
@@ -42,7 +44,13 @@ main = do
     initGUI
 
     builder <- builderNew
-    builderAddFromFile builder "r34GUI.glade"
+    {- when the module is installed with "cabal install", if we don't add the
+    .glade file to the data-files, then the program will only run in the source
+    directory, if we open it with "r34GUI.glade" as the path. Hence, we use
+    getDataFileName to get the location that cabal installed the xml to, then
+    we can open it. -}
+    xmlLocation <- getDataFileName "r34GUI.glade"
+    builderAddFromFile builder xmlLocation
 
     mainWindow <- builderGetObject builder castToWindow "mainWindow"
     searchButton <- builderGetObject builder castToButton "searchButton"
@@ -81,12 +89,14 @@ downloadGUI builder mainWindow = do
 search :: Builder -> String -> MessageDialog -> MVar [ThreadId]
           -> IO (Maybe String)
 search builder entry _ _ = do
-    eitherResults <- find entry
+    eitherResults <- fmap (map pack) <$> find entry
     case eitherResults of
         Left msg -> return $ Just msg
         Right results -> do
-            postGUIAsync $ updateResultsBox builder (map pack results)
-            return Nothing
+            validLength <- updateResultsBox results builder
+            if validLength
+                then return Nothing
+                else return $ Just tooManyResults
 
 download :: Builder -> String -> MessageDialog -> MVar [ThreadId]
             -> IO (Maybe String)
@@ -168,10 +178,15 @@ alert msg mainWindow = do
 newDialog :: Window -> ButtonsType -> String -> IO MessageDialog
 newDialog mainWindow = messageDialogNew (Just mainWindow) [] MessageInfo
 
-updateResultsBox :: Builder -> [Text] -> IO ()
-updateResultsBox builder results = do
-    resultsComboBox <- builderGetObject builder
-                        castToComboBox "resultsComboBox"
-    comboBoxSetModelText resultsComboBox
-    mapM_ (comboBoxAppendText resultsComboBox) results
-    comboBoxSetActive resultsComboBox 0
+updateResultsBox :: [Text] -> Builder -> IO Bool
+updateResultsBox results builder
+    | length results > maxComboBoxSize = u >> return False
+    | otherwise = u >> return True
+    where cappedResults = take maxComboBoxSize results
+          u = postGUIAsync updateResultsBox'
+          updateResultsBox' = do
+            resultsComboBox <- builderGetObject builder
+                                castToComboBox "resultsComboBox"
+            comboBoxSetModelText resultsComboBox
+            mapM_ (comboBoxAppendText resultsComboBox) cappedResults
+            comboBoxSetActive resultsComboBox 0

@@ -5,14 +5,17 @@ Comes with both a GUI and a CMD version.
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
-Current Issues: If you enter a search term with a large amount of results, the GUI performance tanks. For example, searching "a" will make the program awfully slow, maxing out a whole core.
 ## Installation:
 
 #### Clone the repository
 `git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
 
+or download the folder as a zip and unzip it.
+
 #### Compile
-`cd src`
+Move to the directory you downloaded the repo to.
+
+`cd rule34-paheal-downloader/src`
 
 `cabal install`
 
@@ -29,7 +32,12 @@ Run
 
 `r34Downloader` or `r34DownloaderGUI`
 
+The GUI version should be pretty self explanatory. Enter a tag, search for it,
+select your chosen tag from the results, then choose the directory to download
+to, and download it.
+
 See the flags section to customize how you use the CMD version of the program.
+It will prompt you for a tag if you don't provide any arguments.
 
 ## Flags:
 
@@ -74,8 +82,5 @@ Tag search is not case sensitive, so "cute", would also find tags beginning with
 
 
 #### Windows installation
-The setup is the same on windows, I have tried it using a cywgin terminal and it works fine, I have not tried using windows cmd, but I have no reason to believe it would be any different.
 
-GUI setup has not been tested and probably won't work. It will be looked at soon.
-
-Get the haskell platform here: https://www.haskell.org/platform/#windows
+Getting the program to work on windows will probably be difficult. You will have to install gtk3 which I believe doesn't compile on windows with cabal due to a cairo issue. Once you get that sorted out I assume it will work. I'l try to have a look at it at some point so I can provide a list of commands to get it working.

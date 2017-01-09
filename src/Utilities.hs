@@ -15,7 +15,9 @@ module Utilities
     emptyTag,
     noImagesGUI,
     permissionError,
-    zipWithM3_
+    zipWithM3_,
+    maxComboBoxSize,
+    tooManyResults
 )
 where
 
@@ -47,6 +49,12 @@ invalidSearchTerm = "No search term entered, or invalid search term entered\
 
 emptySearch :: String
 emptySearch = "No tag entered. Please enter one before searching."
+
+tooManyResults :: String
+tooManyResults = printf "Too many results found to be displayed. Truncated to \
+                 \%d items. Please refine your search to see all the results."
+                 maxComboBoxSize
+                    
 
 filetypes :: [String]
 filetypes = [".jpg", ".png", ".gif", ".jpeg"]
@@ -111,4 +119,7 @@ removeEscapeSequences (c:cs) = c : removeEscapeSequences cs
 
 zipWithM3_ :: (Applicative m) => 
               (a -> b -> c -> m d) -> [a] -> [b] -> [c] -> m ()
-zipWithM3_ f xs ys zs = sequenceA_ (zipWith3 f xs ys zs)
+zipWithM3_ f xs ys zs = sequenceA_ $ zipWith3 f xs ys zs
+
+maxComboBoxSize :: Int
+maxComboBoxSize = 200
