@@ -7,6 +7,17 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ## Installation:
 
+#### Install prerequistes
+You need both ghc and cabal installed.
+
+##### Debian based:
+`sudo apt-get install ghc haskell-cabal-install`
+
+##### Arch based:
+`sudo pacman -S ghc cabal-install`
+
+Commands should be similar for other distributions. For windows, check the end of the readme.
+
 #### Clone the repository
 `git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
 
