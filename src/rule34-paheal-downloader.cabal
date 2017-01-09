@@ -62,4 +62,4 @@ executable r34Downloader
         cmdargs >=0.10.14 && <0.11
     default-language: Haskell2010
     other-extensions: DeriveDataTypeable
-
+    ghc-options: -threaded

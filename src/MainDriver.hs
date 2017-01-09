@@ -114,19 +114,22 @@ allURLs :: URL -> Int -> [URL]
 allURLs url lastpage = [init url ++ show x | x <- [1..lastpage]]
 
 getLinks :: [URL] -> (String -> IO ()) -> IO [URL]
-getLinks [] _ = return []
-getLinks (x:xs) logger = do
-    input <- openURL x 
-    let links = desiredSection start end getImageLink input
-        start = "<section id='imagelist'>"
-        end = "</section"
-    if null links
-        then desiredLink input
-        else do
-            logger . printf "%d links added to download...\n" $ length links
-            delay oneSecond
-            nextlinks <- getLinks xs logger
-            return $ links ++ nextlinks
+getLinks = getLinks' 0
+    where getLinks' :: Int -> [URL] -> (String -> IO ()) -> IO [URL]
+          getLinks' _ [] _ = return []
+          getLinks' n (x:xs) logger = do
+            input <- openURL x 
+            let links = desiredSection start end getImageLink input
+                start = "<section id='imagelist'>"
+                end = "</section"
+            if null links
+                then desiredLink input
+                else do
+                    let len = n + length links
+                    logger $ printf "%d links added to download...\n" len
+                    delay oneSecond
+                    nextlinks <- getLinks' len xs logger
+                    return $ links ++ nextlinks
 
 {- Need to wait for all the file downloads to complete before returning,
 else the GUI will display "done" while the program is still downloading, and
