@@ -64,8 +64,8 @@ desiredLink redirect = do
           baseURL = "http://rule34.paheal.net/post/view/"
           num = takeWhile isNumber $ dropWhile (not . isNumber) redirect
 
-{- Hyperlinks all start with the "a" identifier, this means we will get less crud
-or have less filtering to do later -}
+{- Hyperlinks all start with the "a" identifier, this means we will get less
+crud or have less filtering to do later -}
 getHyperLinks :: [Tag String] -> [[Attribute String]]
 getHyperLinks = map getText . filter (isTagOpenName "a")
 

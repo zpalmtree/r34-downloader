@@ -28,6 +28,8 @@ Move to the directory you downloaded the repo to.
 
 `cd rule34-paheal-downloader/src`
 
+`cabal update`
+
 `cabal install`
 
 This will install the programs in ~/.cabal/bin

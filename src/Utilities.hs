@@ -111,6 +111,7 @@ removeEscapeSequences ('%':a:b:rest) =
         "40" -> go '@'
         "5B" -> go '['
         "5D" -> go ']'
+        "&"  -> go '_'
         _   -> '%' : a : b : removeEscapeSequences rest
     where code = a : [b]
           go c = c : removeEscapeSequences rest
