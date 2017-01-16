@@ -8,7 +8,7 @@ import Graphics.UI.Gtk.Builder (builderAddFromFile, builderNew,
 import Graphics.UI.Gtk.Abstract.Object (objectDestroy)
 import Graphics.UI.Gtk.Windows.Window (Window, castToWindow)
 import Graphics.UI.Gtk.Buttons.Button (castToButton, buttonActivated)
-import Graphics.UI.Gtk.Entry.Entry (castToEntry, entryGetText)
+import Graphics.UI.Gtk.Entry.Entry (castToEntry, entryGetText, entrySetText)
 import Graphics.UI.Gtk.MenuComboToolbar.ComboBox (castToComboBox,
                                                   comboBoxAppendText,
                                                   comboBoxSetModelText,
@@ -35,7 +35,7 @@ import Paths_rule34_paheal_downloader (getDataFileName)
 import Find (find)
 import Utilities (emptySearch, emptyTag, openURL, noInternet, noImagesGUI,
                   addBaseAddress, permissionError, maxComboBoxSize,
-                  tooManyResults)
+                  tooManyResults, scrub)
 import MainDriver (noImagesExist, desiredSection, getPageNum, allURLs,
                    getLinks, niceDownload)
 
@@ -71,6 +71,7 @@ searchGUI :: Builder -> Window -> IO ()
 searchGUI builder mainWindow = do
     searchInput <- builderGetObject builder castToEntry "searchInput"
     entry <- entryGetText searchInput
+    entrySetText searchInput (scrub entry)
     if null entry
         then alert emptySearch mainWindow
         else cancelableAction mainWindow "Searching..." "Done!"

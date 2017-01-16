@@ -3,7 +3,7 @@ module Utilities
     noInternet,
     noTags,
     openURL,
-    invalidSearchTerm,
+    invalidTag,
     filetypes,
     oneSecond,
     noImages,
@@ -17,7 +17,9 @@ module Utilities
     permissionError,
     zipWithM3_,
     maxComboBoxSize,
-    tooManyResults
+    tooManyResults,
+    emptyInput,
+    scrub
 )
 where
 
@@ -34,7 +36,7 @@ noImagesGUI :: String
 noImagesGUI = "No images were found with that tag. This is an error which occurs when a tag exists, but its images have been removed from the site."
 
 permissionError :: String
-permissionError = "You don't have permission to save files to the selected folder. Try running the program again with admin privileges, if this does not rectify the problem, chose another folder."
+permissionError = "You don't have permission to save files to the selected folder. Try running the program again with admin privileges, if this does not rectify the problem, choose another folder."
 
 noInternet :: String 
 noInternet = "Sorry, we couldn't connect to the website. Check that it's not \
@@ -43,12 +45,15 @@ noInternet = "Sorry, we couldn't connect to the website. Check that it's not \
 noTags :: String
 noTags = "No tag found with that search term, please try again."
 
-invalidSearchTerm :: String
-invalidSearchTerm = "No search term entered, or invalid search term entered\
-                    \ , exiting."
+invalidTag :: String
+invalidTag = printf "Invalid tag entered. \
+                           \Allowed characters are %s" allowedChars
 
 emptySearch :: String
 emptySearch = "No tag entered. Please enter one before searching."
+
+emptyInput :: String
+emptyInput = "No text entered. Please enter a tag."
 
 tooManyResults :: String
 tooManyResults = printf "Too many results found to be displayed. Truncated to \
@@ -68,6 +73,9 @@ oneSecond = 1000000
 
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
+
+scrub :: String -> String
+scrub = filter isAllowedChar . map replaceSpace
 
 noImages :: URL -> String
 noImages = printf "Sorry - no images were found with that tag. (URL: %s) \

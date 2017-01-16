@@ -1,15 +1,11 @@
 module MainDriver
 (
-    askURL,
-    getDir,
-    openURL,
     noImagesExist,
     desiredSection,
     getPageNum,
     allURLs,
-    takeNLinks,
     getLinks,
-    niceDownload
+    niceDownload,
 )
 where
 
@@ -19,18 +15,15 @@ import Network.URI (parseURI)
 import Text.HTML.TagSoup (Attribute, Tag(..), parseTags, (~/=), isTagOpenName)
 import qualified Data.ByteString as B (writeFile)
 import Data.Maybe (fromMaybe)
-import System.Directory (getCurrentDirectory, doesDirectoryExist)
 import Data.Char (isNumber)
 import Control.Concurrent.Thread.Delay (delay)
 import Text.Printf (printf)
-import System.IO (hFlush, stdout)
-import System.FilePath.Posix (addTrailingPathSeparator, takeExtension)
+import System.FilePath.Posix (takeExtension)
 import Control.Concurrent (MVar, forkIO, newEmptyMVar, takeMVar, putMVar,
                            ThreadId, modifyMVar_)
 import Control.Monad (replicateM)
-import ParseArgs (R34(..))
 import Utilities (zipWithM3_, openURL, filetypes, removeEscapeSequences,
-                  oneSecond, addBaseAddress, isAllowedChar, replaceSpace)
+                  oneSecond)
 
 type URL = String
 
@@ -134,7 +127,7 @@ getLinks = getLinks' 0
 {- Need to wait for all the file downloads to complete before returning,
 else the GUI will display "done" while the program is still downloading, and
 thus the user may close the program before all downloads are completed.
-Nicedownload adds a delay to the downloading to respect the robots.txt of
+nicedownload adds a delay to the downloading to respect the robots.txt of
 the site. -}
 niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> MVar [ThreadId]
                 -> IO ()
@@ -151,34 +144,9 @@ niceDownload dir links logger threads = do
                     x num $ removeEscapeSequences link
             delay oneSecond
 
-askURL :: String -> IO URL
-askURL tag'
-    | null tag' = promptTag
-    | otherwise = return $ pretty tag'
-    where pretty = addBaseAddress . filter isAllowedChar . map replaceSpace
-
-promptTag :: IO String
-promptTag = do
-    putStr "Enter the tag which you wish to download: "
-    hFlush stdout
-    addBaseAddress . filter isAllowedChar . map replaceSpace <$> getLine
-
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
 noImagesExist page
     | null . findError $ parseTags page = False
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
-
-takeNLinks :: R34 -> [URL] -> [URL]
-takeNLinks r links
-    | first r <= 0 = links
-    | otherwise = take (first r) links
-
-getDir :: FilePath -> IO FilePath
-getDir dir = do
-    isDir <- doesDirectoryExist dir
-    if isDir
-        then return $ a dir
-        else a <$> getCurrentDirectory
-    where a = addTrailingPathSeparator

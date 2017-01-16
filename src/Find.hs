@@ -8,13 +8,13 @@ import Control.Exception (try, SomeException)
 import Data.List (tails, stripPrefix, isPrefixOf)
 import Data.Maybe (fromJust)
 import Data.Char (toLower)
-import Utilities (invalidSearchTerm, openURL, noInternet, noTags,
-                  removeEscapeSequences, isAllowedChar)
+import Utilities (invalidTag, openURL, noInternet, noTags, scrub,
+                  removeEscapeSequences)
 
 --We use &mincount=1 to add the smaller tags as well as the more popular ones
 find :: String -> IO (Either String [String])
 find searchTerm'
-    | not $ isAllowedChar firstChar = return $ Left invalidSearchTerm
+    | null searchTerm = return $ Left invalidTag
     | otherwise = do
         eitherPage <- try $ openURL url :: IO (Either SomeException String)
         case eitherPage of
@@ -24,7 +24,7 @@ find searchTerm'
                 case tags of
                     [] -> return $ Left noTags
                     _ -> return $ Right tags
-    where searchTerm = map toLower searchTerm'
+    where searchTerm = scrub $ map toLower searchTerm'
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
