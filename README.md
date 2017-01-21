@@ -5,6 +5,8 @@ Comes with both a GUI and a CMD version.
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
+![Screenshot of program](r34downloader.png?raw=true "Screenshot of program")
+
 ## Installation:
 
 #### Install prerequistes
