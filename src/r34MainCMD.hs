@@ -1,19 +1,17 @@
-import Control.Exception (SomeException, try)
+import Control.Exception
 import System.Console.CmdArgs (cmdArgs)
-import Data.Either (either)
-import Control.Concurrent (newMVar)
-import System.IO (hFlush, stdout)
-import System.Directory (doesDirectoryExist, getCurrentDirectory)
-import System.FilePath (addTrailingPathSeparator)
-import ParseArgs (R34(..), r34)
-import MainDriver (noImagesExist, desiredSection, getPageNum, allURLs,
-                   getLinks, niceDownload)
-import Utilities (noInternet, noImages, scrub, invalidTag, addBaseAddress,
-                  emptyInput, openURL)
-import Find (find)
+import Control.Concurrent
+import System.IO
+import System.Directory
+import System.FilePath
+import ParseArgs 
+import MainDriver
+import Utilities 
+import Find
 
 type URL = String
 
+--Stairs!
 main :: IO ()
 main = do
     args <- cmdArgs r34

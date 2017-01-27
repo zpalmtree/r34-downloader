@@ -4,12 +4,11 @@ module Find
 )
 where
 
-import Control.Exception (try, SomeException)
+import Control.Exception
 import Data.List (tails, stripPrefix, isPrefixOf)
-import Data.Maybe (fromJust)
-import Data.Char (toLower)
-import Utilities (invalidTag, openURL, noInternet, noTags, scrub,
-                  removeEscapeSequences)
+import Data.Maybe
+import Data.Char
+import Utilities 
 
 --We use &mincount=1 to add the smaller tags as well as the more popular ones
 find :: String -> IO (Either String [String])

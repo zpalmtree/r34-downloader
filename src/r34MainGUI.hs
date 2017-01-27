@@ -1,43 +1,14 @@
-{- I could import all the GTK stuff just from Graphics.UI.Gtk (..), but I find
-it a lot easier to learn and remember where things are if I export them from
-each submodule -}
-import Graphics.UI.Gtk.General.General (initGUI, mainQuit, mainGUI,
-                                        postGUIAsync)
-import Graphics.UI.Gtk.Builder (builderAddFromFile, builderNew,
-                                builderGetObject, Builder)
-import Graphics.UI.Gtk.Abstract.Object (objectDestroy)
-import Graphics.UI.Gtk.Windows.Window (Window, castToWindow)
-import Graphics.UI.Gtk.Buttons.Button (castToButton, buttonActivated)
-import Graphics.UI.Gtk.Entry.Entry (castToEntry, entryGetText, entrySetText)
-import Graphics.UI.Gtk.MenuComboToolbar.ComboBox (castToComboBox,
-                                                  comboBoxAppendText,
-                                                  comboBoxSetModelText,
-                                                  comboBoxSetActive,
-                                                  comboBoxGetActiveText)
-import Graphics.UI.Gtk.Windows.Dialog (dialogRun, ResponseId(..),
-                                       dialogResponse)
-import Graphics.UI.Gtk.Abstract.Widget (widgetShowAll, widgetDestroy)
-import Graphics.UI.Gtk.Windows.MessageDialog (messageDialogNew,
-                                              MessageType(..), ButtonsType(..),
-                                              MessageDialog,
-                                              messageDialogSetMarkup)
-import Graphics.UI.Gtk.Selectors.FileChooser (fileChooserSelectFilename,
-                                              castToFileChooser,
-                                              fileChooserGetFilename)
-import System.Glib.Signals (on)
+import Graphics.UI.Gtk hiding (response)
+
 import Data.Text (Text, pack, unpack)
-import Control.Concurrent (killThread, forkIO, newMVar, takeMVar, MVar,
-                           ThreadId)
-import Control.Exception (SomeException, try)
-import Control.Monad (void)
-import System.Directory (getCurrentDirectory, getPermissions, writable)
-import Paths_rule34_paheal_downloader (getDataFileName)
-import Find (find)
-import Utilities (emptySearch, emptyTag, openURL, noInternet, noImagesGUI,
-                  addBaseAddress, permissionError, maxComboBoxSize,
-                  tooManyResults, scrub)
-import MainDriver (noImagesExist, desiredSection, getPageNum, allURLs,
-                   getLinks, niceDownload)
+import Control.Concurrent
+import Control.Exception
+import Control.Monad
+import System.Directory
+import Paths_rule34_paheal_downloader
+import Find
+import Utilities 
+import MainDriver 
 
 main :: IO ()
 main = do

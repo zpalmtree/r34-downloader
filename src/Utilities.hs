@@ -23,9 +23,9 @@ module Utilities
 )
 where
 
-import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
-import Text.Printf (printf)
-import Data.Foldable (sequenceA_)
+import Network.HTTP
+import Text.Printf
+import Data.Foldable
 
 type URL = String
 

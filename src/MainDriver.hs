@@ -9,21 +9,18 @@ module MainDriver
 )
 where
 
-import Network.HTTP (getResponseBody, simpleHTTP, getResponseBody,
-                        defaultGETRequest_)
-import Network.URI (parseURI)
-import Text.HTML.TagSoup (Attribute, Tag(..), parseTags, (~/=), isTagOpenName)
-import qualified Data.ByteString as B (writeFile)
-import Data.Maybe (fromMaybe)
-import Data.Char (isNumber)
-import Control.Concurrent.Thread.Delay (delay)
-import Text.Printf (printf)
-import System.FilePath.Posix (takeExtension)
-import Control.Concurrent (MVar, forkIO, newEmptyMVar, takeMVar, putMVar,
-                           ThreadId, modifyMVar_)
-import Control.Monad (replicateM)
-import Utilities (zipWithM3_, openURL, filetypes, removeEscapeSequences,
-                  oneSecond)
+import Network.HTTP
+import Network.URI
+import Text.HTML.TagSoup 
+import qualified Data.ByteString as B
+import Data.Maybe
+import Data.Char
+import Control.Concurrent.Thread.Delay
+import Text.Printf
+import System.FilePath.Posix
+import Control.Concurrent
+import Control.Monad
+import Utilities
 
 type URL = String
 
