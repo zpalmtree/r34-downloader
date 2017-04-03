@@ -62,7 +62,7 @@ tooManyResults = printf "Too many results found to be displayed. Truncated to \
                     
 
 filetypes :: [String]
-filetypes = [".jpg", ".png", ".gif", ".jpeg"]
+filetypes = [".jpg", ".png", ".gif", ".jpeg", ".webm"]
 
 openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
