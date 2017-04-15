@@ -9,11 +9,10 @@ module MainDriver
 )
 where
 
-import Network.HTTP
-import Network.URI
+import Data.Conduit.Binary (sinkFile)
+import Data.Conduit
+import Network.HTTP.Simple
 import Text.HTML.TagSoup 
-import qualified Data.ByteString as B
-import Data.Maybe
 import Data.Char
 import Control.Concurrent.Thread.Delay
 import Text.Printf
@@ -65,22 +64,15 @@ getImageLink xs = filter isImage links
     where links = map (snd . last) xs
           isImage x = takeExtension x `elem` filetypes
 
-{- From https://stackoverflow.com/questions/11514671/
-     haskell-network-http-incorrectly-downloading-image/11514868 -}
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = do
-    image <- get
-    B.writeFile filename image
-    where get = let uri = fromMaybe (error $ "Invalid URI: " ++ url)
-                            (parseURI url)
-                in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
-          filename = removeEscapeSequences $ name dir url
+    request <- parseRequest url
+    runConduitRes $ httpSource request getResponseBody .| sinkFile filename
+    where filename = removeEscapeSequences $ name dir url
 
 {- Extract the file name of the image from the url and add it to the directory
-path so we can rename files. We truncate to 255 characters because
-openBinaryFile errors on a filename length over 256. We ensure we retain the 
-directory path and the filename. Note that this will probably fail if the dir
-length is over 255. Not sure if filesystems even support that though. -}
+path so we can rename files. We truncate to 255 characters for OS
+considerations. -}
 name :: FilePath -> URL -> FilePath
 name dir url
     | length xs + len > maxFileNameLen = dir ++ desired
