@@ -9,6 +9,7 @@ import Data.List (tails, stripPrefix, isPrefixOf)
 import Data.Maybe
 import Data.Char
 import Utilities 
+import Strings
 
 --We use &mincount=1 to add the smaller tags as well as the more popular ones
 find :: String -> IO (Either String [String])

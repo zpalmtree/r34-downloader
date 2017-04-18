@@ -44,10 +44,7 @@ executable r34DownloaderGUI
         cmdargs >=0.10.14 && <0.11,
         gtk3 >=0.14.6 && <0.15,
         glib >=0.13.4.1 && <0.14,
-        text >=1.2.2.1 && <1.3,
-        http-conduit >=2.2.3.1 && <2.3,
-        conduit >=1.2.9.1 && <1.3,
-        conduit-extra >=1.1.15 && <1.2
+        text >=1.2.2.1 && <1.3
     default-language: Haskell2010
     other-modules:
         Paths_rule34_paheal_downloader
@@ -64,10 +61,7 @@ executable r34Downloader
         directory >=1.2.6.2 && <1.3,
         unbounded-delays >=0.1.0.9 && <0.2,
         filepath >=1.4.1.0 && <1.5,
-        cmdargs >=0.10.14 && <0.11,
-        http-conduit >=2.2.3.1 && <2.3,
-        conduit >=1.2.9.1 && <1.3,
-        conduit-extra >=1.1.15 && <1.2
+        cmdargs >=0.10.14 && <0.11
     default-language: Haskell2010
     other-extensions: DeriveDataTypeable
     ghc-options: -threaded

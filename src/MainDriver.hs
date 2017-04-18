@@ -6,20 +6,23 @@ module MainDriver
     allURLs,
     getLinks,
     niceDownload,
+    niceDownloadAsync
 )
 where
 
-import Data.Conduit.Binary (sinkFile)
-import Data.Conduit
-import Network.HTTP.Simple
+import qualified Data.ByteString as B
+import Network.HTTP
+import Network.URI
+import Data.Maybe
 import Text.HTML.TagSoup 
 import Data.Char
 import Control.Concurrent.Thread.Delay
-import Text.Printf
 import System.FilePath.Posix
 import Control.Concurrent
 import Control.Monad
+import Control.Exception
 import Utilities
+import Strings
 
 type URL = String
 
@@ -64,11 +67,14 @@ getImageLink xs = filter isImage links
     where links = map (snd . last) xs
           isImage x = takeExtension x `elem` filetypes
 
+--edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = do
-    request <- parseRequest url
-    runConduitRes $ httpSource request getResponseBody .| sinkFile filename
+    img <- dlFile
+    B.writeFile filename img
     where filename = removeEscapeSequences $ name dir url
+          request = defaultGETRequest_ . fromJust $ parseURI url
+          dlFile = getResponseBody =<< simpleHTTP request
 
 {- Extract the file name of the image from the url and add it to the directory
 path so we can rename files. We truncate to 255 characters for OS
@@ -108,7 +114,7 @@ getLinks = getLinks' 0
                 then desiredLink input
                 else do
                     let len = n + length links
-                    logger $ printf "%d links added to download...\n" len
+                    logger $ linksAdded len
                     delay oneSecond
                     nextlinks <- getLinks' len xs logger
                     return $ links ++ nextlinks
@@ -118,20 +124,33 @@ else the GUI will display "done" while the program is still downloading, and
 thus the user may close the program before all downloads are completed.
 nicedownload adds a delay to the downloading to respect the robots.txt of
 the site. -}
-niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> MVar [ThreadId]
-                -> IO ()
-niceDownload dir links logger threads = do
+niceDownloadAsync :: FilePath -> [URL] -> (String -> IO ()) -> MVar [ThreadId]
+                     -> IO ()
+niceDownloadAsync dir links logger threads = do
     mvars <- replicateM num newEmptyMVar
     forkIO $ zipWithM3_ niceDownload' links [1..] mvars
     mapM_ takeMVar mvars
     where num = length links
           niceDownload' :: URL -> Int -> MVar () -> IO () 
           niceDownload' link x m = do
-            child <- forkIO (downloadImage dir link >> putMVar m ())
+            child <- forkIO $ tryDownloadImage dir link m logger
             modifyMVar_ threads (\t -> return $ child : t)
-            logger . printf "Downloading %d out of %d: %s\n"
-                    x num $ removeEscapeSequences link
+            logger $ downloading x num (removeEscapeSequences link)
             delay oneSecond
+
+niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> MVar () -> IO ()
+niceDownload dir links' logger timeToDie = niceDownload' links' 1
+    where num = length links'
+          niceDownload' :: [URL] -> Int -> IO ()
+          niceDownload' [] _ = return ()
+          niceDownload' (link:links) x = do
+            empty <- isEmptyMVar timeToDie 
+            when empty $ do
+                logger $ downloading x num (removeEscapeSequences link)
+                catch (downloadImage dir link) (handler link)
+                niceDownload' links (x+1)
+          handler :: URL -> SomeException -> IO ()
+          handler link e = logger $ downloadException link (show e)
 
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
@@ -139,3 +158,11 @@ noImagesExist page
     | null . findError $ parseTags page = False
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
+
+tryDownloadImage :: FilePath -> URL -> MVar () -> (String -> IO a) -> IO ()
+tryDownloadImage dir link m logger = catch (downloadImage dir link >> putMVar m ()) handler
+    where handler :: SomeException -> IO ()
+          handler e = do
+            logger $ downloadException link (show e)
+            empty <- isEmptyMVar m
+            when empty $ putMVar m ()
