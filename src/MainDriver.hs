@@ -133,7 +133,8 @@ niceDownloadAsync dir links logger threads = do
     where num = length links
           niceDownload' :: URL -> Int -> MVar () -> IO () 
           niceDownload' link x m = do
-            child <- forkIO $ tryDownloadImage dir link m logger
+            child <- forkFinally (downloadImage dir link)
+                                 (cleanUp m logger link)
             modifyMVar_ threads (\t -> return $ child : t)
             logger $ downloading x num (removeEscapeSequences link)
             delay oneSecond
@@ -159,10 +160,9 @@ noImagesExist page
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
-tryDownloadImage :: FilePath -> URL -> MVar () -> (String -> IO a) -> IO ()
-tryDownloadImage dir link m logger = catch (downloadImage dir link >> putMVar m ()) handler
-    where handler :: SomeException -> IO ()
-          handler e = do
-            logger $ downloadException link (show e)
-            empty <- isEmptyMVar m
-            when empty $ putMVar m ()
+cleanUp :: MVar () -> (String -> IO ()) -> URL -> Either SomeException a
+           -> IO ()
+cleanUp m logger link (Left err) = do
+    logger $ downloadException link (show err)
+    putMVar m ()
+cleanUp m _ _ _ = putMVar m ()

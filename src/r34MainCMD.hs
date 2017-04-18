@@ -72,5 +72,6 @@ maybeDL args = do
                     links <- takeNLinks args <$> getLinks urls putStrLn
                     if disableasync args
                         then niceDownload dir links putStrLn =<< newEmptyMVar
-                        else niceDownloadAsync dir links putStrLn =<< newMVar []
+                        else niceDownloadAsync dir links putStrLn 
+                             =<< newMVar []
 
