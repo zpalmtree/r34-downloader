@@ -17,7 +17,7 @@ import Data.Maybe
 import Text.HTML.TagSoup 
 import Data.Char
 import Control.Concurrent.Thread.Delay
-import System.FilePath.Posix
+import System.FilePath
 import Control.Concurrent
 import Control.Monad
 import Control.Exception

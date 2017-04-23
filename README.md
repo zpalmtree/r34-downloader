@@ -9,6 +9,8 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ## Installation:
 
+Windows isn't supported. I couldn't figure out how to get gtk/cairo to build.
+
 #### Install prerequistes
 You need both ghc and cabal installed.
 
@@ -103,8 +105,3 @@ Tag search is not case sensitive, so "cute", would also find tags beginning with
 
 #### --disableasync
 Disables asynchronous download. See the Running the program section for more info.
-
-
-#### Windows installation
-
-Getting the program to work on windows will probably be difficult. You will have to install gtk3 which I believe doesn't compile on windows with cabal due to a cairo issue. Once you get that sorted out I assume it will work. I'l try to have a look at it at some point so I can provide a list of commands to get it working.
