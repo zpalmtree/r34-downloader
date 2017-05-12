@@ -10,42 +10,36 @@ The website has a one request a second limit, thus users with fast internet conn
 ## Installation:
 
 #### Install prerequistes
-You need both ghc and cabal installed.
+You need stack installed.
 
 ##### Debian based:
-`sudo apt-get install ghc haskell-cabal-install`
+`sudo apt-get install haskell-stack`
 
 ##### Arch based:
-`sudo pacman -S ghc cabal-install`
+`sudo pacman -S stack`
 
 Commands should be similar for other distributions. For windows, check the end of the readme.
 
 #### Clone the repository
 `git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
 
-or download the folder as a zip and unzip it.
+`cd rule34-paheal-downloader`
 
-#### Compile
-Move to the directory you downloaded the repo to.
+#### Setup stack and compile
 
-`cd rule34-paheal-downloader/src`
+`stack setup`
 
-`cabal update`
+`stack install`
 
-`cabal install`
+Then either add ~/.local/bin to your path and run the executable of your choice:
 
-This will install the programs in ~/.cabal/bin
+`r34Downloader`
+`r34DownloaderGUI`
 
-If you add this line to your ~/.profile:
-`PATH=$PATH:~/.cabal/bin`
-you will be able to run the programs from any bash shell.
+Or, run
 
-Otherwise, you will have to invoke them with ~/.cabal/bin/r34Downloader
-
-#### Running the program
-Run
-
-`r34Downloader` or `r34DownloaderGUI`
+`stack exec r34Downloader`
+`stack exec r34DownloaderGUI`
 
 The GUI version should be pretty self explanatory. Enter a tag, search for it,
 select your chosen tag from the results, then choose the directory to download

@@ -1,3 +1,4 @@
 r34MainGUI
 r34MainCMD
 /src/dist
+*.stack-work
