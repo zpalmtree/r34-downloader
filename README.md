@@ -20,7 +20,7 @@ You need stack installed.
 ##### Arch based:
 `sudo pacman -S stack`
 
-Commands should be similar for other distributions. For windows, check the end of the readme.
+Commands should be similar for other distributions.
 
 #### Clone the repository
 `git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
