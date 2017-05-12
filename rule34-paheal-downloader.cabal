@@ -3,32 +3,13 @@ version: 0.1.0.0
 cabal-version: >=1.10
 build-type: Simple
 license: BSD3
-license-file: ../LICENSE.txt
+license-file: LICENSE.txt
 maintainer: z.palmer@openmailbox.org
 synopsis: Downloader for rule34.paheal.net with a GUI and CMD interface.
-description:
-    Downloader for rule34.paheal.net with a GUI and CMD interface.
-    .
-    GUI is built using gtk2hs.
-    .
-    /Installation/
-    .
-    >cabal configure
-    >cabal build
-    >cabal install
-    /Running/
-    If ~/.cabal/bin is in your path, simply execute
-    .
-    >r34Downloader
-    or
-    >r34DownloaderGUI
-    .
-    If it isn't, then run
-    >~/.cabal/bin/r34Downloader
 category: Web
 author: ZedPea
 data-files:
-    r34GUI.glade
+    src/r34GUI.glade
 
 executable r34DownloaderGUI
     main-is: r34MainGUI.hs
@@ -47,7 +28,8 @@ executable r34DownloaderGUI
         text >=1.2.2.1 && <1.3
     default-language: Haskell2010
     other-modules:
-        Paths_rule34_paheal_downloader
+        Paths_rule34_paheal_downloader, Find, MainDriver, Strings, Utilities
+    hs-source-dirs: src
     ghc-options: -threaded
 
 executable r34Downloader
@@ -64,5 +46,7 @@ executable r34Downloader
         cmdargs >=0.10.14 && <0.11
     default-language: Haskell2010
     other-extensions: DeriveDataTypeable
+    other-modules: Find, MainDriver, ParseArgs, Strings, Utilities
+    hs-source-dirs: src
     ghc-options: -threaded
 
