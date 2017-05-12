@@ -8,43 +8,18 @@ import ParseArgs
 import MainDriver
 import Utilities 
 import Find
+import Strings
 
 type URL = String
 
---Stairs!
 main :: IO ()
 main = do
     args <- cmdArgs r34
     if null $ search args
-    then do
-        eitherUrl <- askURL (tag args)
-        case eitherUrl of
-            Left msg -> putStrLn msg
-            Right url -> do
-                dir <- getDir (directory args)
-                firstpage <- try $ openURL url :: IO (Either
-                                                      SomeException
-                                                      String)
-                case firstpage of
-                    Left _ -> putStrLn noInternet
-                    Right val -> if noImagesExist val
-                                    then putStrLn $ noImages url
-                                    else do
-                        let lastpage = desiredSection start end getPageNum val
-                            urls = allURLs url lastpage
-                            start = "<section id='paginator'>"
-                            end = "</section"
-                        links <- takeNLinks args <$> getLinks urls putStr
-                        threads <- newMVar []
-                        {- don't actually need to do anything with the child
-                        threads, as the only way a user can cancel the download
-                        is with ctrl+c or similar method which kills the entire
-                        program. The haskell runtime kills all threads upon the
-                        mainthread dying. -}
-                        niceDownload dir links putStr threads
-    else do
-        eitherResult <- find (search args)
-        either putStrLn (mapM_ putStrLn) eitherResult
+        then maybeDL args
+        else do
+            eitherResult <- find (search args)
+            either putStrLn (mapM_ putStrLn) eitherResult
 
 askURL :: String -> IO (Either String URL)
 askURL tag'
@@ -76,3 +51,27 @@ takeNLinks :: R34 -> [URL] -> [URL]
 takeNLinks r links
     | first r <= 0 = links
     | otherwise = take (first r) links
+
+maybeDL :: R34 -> IO ()
+maybeDL args = do
+    eitherUrl <- askURL (tag args)
+    case eitherUrl of
+        Left err -> putStrLn err
+        Right url -> do
+            dir <- getDir (directory args)
+            firstpage <- try $ openURL url :: IO (Either SomeException String)
+            case firstpage of
+                Left _ -> putStrLn noInternet
+                Right val -> if noImagesExist val
+                                then putStrLn $ noImages url
+                                else do
+                    let lastpage = desiredSection start end getPageNum val
+                        urls = allURLs url lastpage
+                        start = "<section id='paginator'>"
+                        end = "</section"
+                    links <- takeNLinks args <$> getLinks urls putStrLn
+                    if disableasync args
+                        then niceDownload dir links putStrLn =<< newEmptyMVar
+                        else niceDownloadAsync dir links putStrLn 
+                             =<< newMVar []
+

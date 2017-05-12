@@ -6,21 +6,23 @@ module MainDriver
     allURLs,
     getLinks,
     niceDownload,
+    niceDownloadAsync
 )
 where
 
+import qualified Data.ByteString as B
 import Network.HTTP
 import Network.URI
-import Text.HTML.TagSoup 
-import qualified Data.ByteString as B
 import Data.Maybe
+import Text.HTML.TagSoup 
 import Data.Char
 import Control.Concurrent.Thread.Delay
-import Text.Printf
-import System.FilePath.Posix
+import System.FilePath
 import Control.Concurrent
 import Control.Monad
+import Control.Exception
 import Utilities
+import Strings
 
 type URL = String
 
@@ -65,22 +67,18 @@ getImageLink xs = filter isImage links
     where links = map (snd . last) xs
           isImage x = takeExtension x `elem` filetypes
 
-{- From https://stackoverflow.com/questions/11514671/
-     haskell-network-http-incorrectly-downloading-image/11514868 -}
+--edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = do
-    image <- get
-    B.writeFile filename image
-    where get = let uri = fromMaybe (error $ "Invalid URI: " ++ url)
-                            (parseURI url)
-                in simpleHTTP (defaultGETRequest_ uri) >>= getResponseBody
-          filename = removeEscapeSequences $ name dir url
+    img <- dlFile
+    B.writeFile filename img
+    where filename = removeEscapeSequences $ name dir url
+          request = defaultGETRequest_ . fromJust $ parseURI url
+          dlFile = getResponseBody =<< simpleHTTP request
 
 {- Extract the file name of the image from the url and add it to the directory
-path so we can rename files. We truncate to 255 characters because
-openBinaryFile errors on a filename length over 256. We ensure we retain the 
-directory path and the filename. Note that this will probably fail if the dir
-length is over 255. Not sure if filesystems even support that though. -}
+path so we can rename files. We truncate to 255 characters for OS
+considerations. -}
 name :: FilePath -> URL -> FilePath
 name dir url
     | length xs + len > maxFileNameLen = dir ++ desired
@@ -116,7 +114,7 @@ getLinks = getLinks' 0
                 then desiredLink input
                 else do
                     let len = n + length links
-                    logger $ printf "%d links added to download...\n" len
+                    logger $ linksAdded len
                     delay oneSecond
                     nextlinks <- getLinks' len xs logger
                     return $ links ++ nextlinks
@@ -126,20 +124,34 @@ else the GUI will display "done" while the program is still downloading, and
 thus the user may close the program before all downloads are completed.
 nicedownload adds a delay to the downloading to respect the robots.txt of
 the site. -}
-niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> MVar [ThreadId]
-                -> IO ()
-niceDownload dir links logger threads = do
+niceDownloadAsync :: FilePath -> [URL] -> (String -> IO ()) -> MVar [ThreadId]
+                     -> IO ()
+niceDownloadAsync dir links logger threads = do
     mvars <- replicateM num newEmptyMVar
     forkIO $ zipWithM3_ niceDownload' links [1..] mvars
     mapM_ takeMVar mvars
     where num = length links
           niceDownload' :: URL -> Int -> MVar () -> IO () 
           niceDownload' link x m = do
-            child <- forkIO (downloadImage dir link >> putMVar m ())
+            child <- forkFinally (downloadImage dir link)
+                                 (cleanUp m logger link)
             modifyMVar_ threads (\t -> return $ child : t)
-            logger . printf "Downloading %d out of %d: %s\n"
-                    x num $ removeEscapeSequences link
+            logger $ downloading x num (removeEscapeSequences link)
             delay oneSecond
+
+niceDownload :: FilePath -> [URL] -> (String -> IO ()) -> MVar () -> IO ()
+niceDownload dir links' logger timeToDie = niceDownload' links' 1
+    where num = length links'
+          niceDownload' :: [URL] -> Int -> IO ()
+          niceDownload' [] _ = return ()
+          niceDownload' (link:links) x = do
+            empty <- isEmptyMVar timeToDie 
+            when empty $ do
+                logger $ downloading x num (removeEscapeSequences link)
+                catch (downloadImage dir link) (handler link)
+                niceDownload' links (x+1)
+          handler :: URL -> SomeException -> IO ()
+          handler link e = logger $ downloadException link (show e)
 
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
@@ -147,3 +159,10 @@ noImagesExist page
     | null . findError $ parseTags page = False
     | otherwise = True
     where findError = dropWhile (~/= "<section id='Errormain'>")
+
+cleanUp :: MVar () -> (String -> IO ()) -> URL -> Either SomeException a
+           -> IO ()
+cleanUp m logger link (Left err) = do
+    logger $ downloadException link (show err)
+    putMVar m ()
+cleanUp m _ _ _ = putMVar m ()

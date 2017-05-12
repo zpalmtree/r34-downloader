@@ -9,6 +9,8 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ## Installation:
 
+Windows isn't supported. I couldn't figure out how to get gtk/cairo to build.
+
 #### Install prerequistes
 You need stack installed.
 
@@ -44,6 +46,12 @@ Or, run
 The GUI version should be pretty self explanatory. Enter a tag, search for it,
 select your chosen tag from the results, then choose the directory to download
 to, and download it.
+
+What's that async disable button about? Well, the program attempts to start a 
+download every second, and when you're on a slow connection, that means a large
+amount of downloads build up. They seem to end timing out, and using a lot of memory.
+Check this box if your downloads are failing. It might be suggested to use it from the
+start if you have a slow connection.
 
 See the flags section to customize how you use the CMD version of the program.
 It will prompt you for a tag if you don't provide any arguments.
@@ -89,7 +97,5 @@ Usage: `r34Downloader --search=cute`
 If a tag "cute_anime_girl" existed, it would be printed to the console, along with any other tags beginning with "cute".
 Tag search is not case sensitive, so "cute", would also find tags beginning with "Cute", for example.
 
-
-#### Windows installation
-
-Getting the program to work on windows will probably be difficult. You will have to install gtk3 which I believe doesn't compile on windows with cabal due to a cairo issue. Once you get that sorted out I assume it will work. I'l try to have a look at it at some point so I can provide a list of commands to get it working.
+#### --disableasync
+Disables asynchronous download. See the Running the program section for more info.

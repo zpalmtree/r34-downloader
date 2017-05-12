@@ -9,6 +9,7 @@ import Paths_rule34_paheal_downloader
 import Find
 import Utilities 
 import MainDriver 
+import Strings
 
 main :: IO ()
 main = do
@@ -58,9 +59,9 @@ downloadGUI builder mainWindow = do
         Just tag -> cancelableAction mainWindow "Downloading..." "Done!"
                     (download builder (unpack tag))
 
-search :: Builder -> String -> MessageDialog -> MVar [ThreadId]
+search :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
           -> IO (Maybe String)
-search builder entry _ _ = do
+search builder entry _ _ _ = do
     eitherResults <- fmap (map pack) <$> find entry
     case eitherResults of
         Left msg -> return $ Just msg
@@ -70,9 +71,9 @@ search builder entry _ _ = do
                 then return Nothing
                 else return $ Just tooManyResults
 
-download :: Builder -> String -> MessageDialog -> MVar [ThreadId]
+download :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
             -> IO (Maybe String)
-download builder tag dialog threads = do
+download builder tag dialog threads timeToDie = do
     filePicker <- builderGetObject builder castToFileChooser "folderPicker"
     Just dir <- fmap (++ "/") <$> fileChooserGetFilename filePicker
     permissions <- getPermissions dir
@@ -93,7 +94,12 @@ download builder tag dialog threads = do
                     end = "</section"
 
                 links <- getLinks urls (guiLogger dialog)
-                niceDownload dir links (guiLogger dialog) threads
+                checkButton <- builderGetObject builder castToCheckButton 
+                               "asyncButton"
+                asyncDisabled <- toggleButtonGetActive checkButton
+                if asyncDisabled
+                    then niceDownload dir links (guiLogger dialog) timeToDie
+                    else niceDownloadAsync dir links (guiLogger dialog) threads
                 return Nothing
 
         else return $ Just permissionError
@@ -102,7 +108,6 @@ download builder tag dialog threads = do
 guiLogger :: MessageDialog -> String -> IO ()
 guiLogger dialog msg = postGUIAsync $ messageDialogSetMarkup dialog msg
 
-
 {- dialog is ran after childthread is created. This may be dangerous, if
 the function returns very quickly it could maybe? give a signal to the
 dialog to close before the dialog has been run. I'm not sure what will
@@ -110,12 +115,13 @@ happen if this occurs, maybe a crash, or maybe the signal won't be
 recognised yet so the dialog will persist despite the operation having
 completed. -}
 cancelableAction :: Window -> String -> String ->
-                    (MessageDialog -> MVar [ThreadId] ->
+                    (MessageDialog -> MVar [ThreadId] -> MVar () ->
                     IO (Maybe String)) -> IO ()
 cancelableAction mainWindow initMsg completionMsg func = do
     threads <- newMVar []
+    timeToDie <- newEmptyMVar
     dialog <- newDialog mainWindow ButtonsCancel initMsg
-    childThread <- forkIO $ childTasks dialog threads
+    childThread <- forkIO $ childTasks dialog threads timeToDie
     response <- dialogRun dialog
     widgetDestroy dialog
     case response of
@@ -130,10 +136,11 @@ cancelableAction mainWindow initMsg completionMsg func = do
         _ -> do
             runningThreads <- takeMVar threads
             mapM_ killThread runningThreads
+            putMVar timeToDie ()
             killThread childThread
 
-    where childTasks dialog threads = do
-                maybeErr <- func dialog threads
+    where childTasks dialog threads timeToDie = do
+                maybeErr <- func dialog threads timeToDie
                 case maybeErr of
                     Nothing -> postGUIAsync $ dialogResponse dialog ResponseOk
                     Just errMsg -> do

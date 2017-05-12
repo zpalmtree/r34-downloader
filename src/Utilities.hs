@@ -1,68 +1,25 @@
 module Utilities
 (
-    noInternet,
-    noTags,
     openURL,
-    invalidTag,
     filetypes,
     oneSecond,
-    noImages,
-    addBaseAddress,
     isAllowedChar,
+    allowedChars,
     replaceSpace,
     removeEscapeSequences,
-    emptySearch,
-    emptyTag,
-    noImagesGUI,
-    permissionError,
     zipWithM3_,
     maxComboBoxSize,
-    tooManyResults,
-    emptyInput,
-    scrub
+    scrub,
 )
 where
 
 import Network.HTTP
-import Text.Printf
 import Data.Foldable
 
 type URL = String
 
-emptyTag :: String
-emptyTag = "No tag selected. Please select one before downloading."
-
-noImagesGUI :: String
-noImagesGUI = "No images were found with that tag. This is an error which occurs when a tag exists, but its images have been removed from the site."
-
-permissionError :: String
-permissionError = "You don't have permission to save files to the selected folder. Try running the program again with admin privileges, if this does not rectify the problem, choose another folder."
-
-noInternet :: String 
-noInternet = "Sorry, we couldn't connect to the website. Check that it's not \
-            \down and you have an internet connection."
-
-noTags :: String
-noTags = "No tag found with that search term, please try again."
-
-invalidTag :: String
-invalidTag = printf "Invalid tag entered. \
-                           \Allowed characters are %s" allowedChars
-
-emptySearch :: String
-emptySearch = "No tag entered. Please enter one before searching."
-
-emptyInput :: String
-emptyInput = "No text entered. Please enter a tag."
-
-tooManyResults :: String
-tooManyResults = printf "Too many results found to be displayed. Truncated to \
-                 \%d items. Please refine your search to see all the results."
-                 maxComboBoxSize
-                    
-
 filetypes :: [String]
-filetypes = [".jpg", ".png", ".gif", ".jpeg"]
+filetypes = [".jpg", ".png", ".gif", ".jpeg", ".webm"]
 
 openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
@@ -71,15 +28,8 @@ openURL x = getResponseBody =<< simpleHTTP (getRequest x)
 oneSecond :: (Num a) => a
 oneSecond = 1000000
 
-addBaseAddress :: String -> URL
-addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
-
 scrub :: String -> String
 scrub = filter isAllowedChar . map replaceSpace
-
-noImages :: URL -> String
-noImages = printf "Sorry - no images were found with that tag. (URL: %s) \
-            \Ensure you spelt it correctly."
 
 --comment for hlint, style checker
 --makes a lot more sense for this to be an array of characters than a string
