@@ -16,12 +16,8 @@ main = do
     initGUI
 
     builder <- builderNew
-    {- when the module is installed with "cabal install", if we don't add the
-    .glade file to the data-files, then the program will only run in the source
-    directory, if we open it with "r34GUI.glade" as the path. Hence, we use
-    getDataFileName to get the location that cabal installed the xml to, then
-    we can open it. -}
-    xmlLocation <- getDataFileName "r34GUI.glade"
+    -- getDataFileName gets the location of the installed .glade file.
+    xmlLocation <- getDataFileName "src/r34GUI.glade"
     builderAddFromFile builder xmlLocation
 
     mainWindow <- builderGetObject builder castToWindow "mainWindow"

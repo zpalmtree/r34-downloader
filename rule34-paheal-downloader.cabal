@@ -8,6 +8,8 @@ maintainer: z.palmer@openmailbox.org
 synopsis: Downloader for rule34.paheal.net with a GUI and CMD interface.
 category: Web
 author: ZedPea
+extra-source-files:
+	README.md	
 data-files:
     src/r34GUI.glade
 
