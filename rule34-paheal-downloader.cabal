@@ -48,7 +48,7 @@ executable r34Downloader
         cmdargs >=0.10.14 && <0.11
     default-language: Haskell2010
     other-extensions: DeriveDataTypeable
-    other-modules: Find, MainDriver, ParseArgs, Strings, Utilities
+    other-modules: Find, MainDriver, ParseArgs, Strings, Utilities, Links
     hs-source-dirs: src
     ghc-options: -threaded
 

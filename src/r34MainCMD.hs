@@ -4,11 +4,13 @@ import Control.Concurrent
 import System.IO
 import System.Directory
 import System.FilePath
+
 import ParseArgs 
 import MainDriver
 import Utilities 
 import Find
 import Strings
+import Links
 
 type URL = String
 
@@ -24,9 +26,8 @@ main = do
 askURL :: String -> IO (Either String URL)
 askURL tag'
     | null tag' = askURL'
-    | otherwise = if null $ scrub tag'
-                    then return $ Left invalidTag
-                    else return . Right $ addBaseAddress (scrub tag')
+    | null $ scrub tag' = return $ Left invalidTag
+    | otherwise = return . Right $ addBaseAddress (scrub tag')
 
 askURL' :: IO (Either String URL)
 askURL' = do
@@ -47,15 +48,10 @@ getDir dir = do
         else a <$> getCurrentDirectory
     where a = addTrailingPathSeparator
 
-takeNLinks :: R34 -> [URL] -> [URL]
-takeNLinks r links
-    | first r <= 0 = links
-    | otherwise = take (first r) links
-
 maybeDL :: R34 -> IO ()
 maybeDL args = do
-    eitherUrl <- askURL (tag args)
-    case eitherUrl of
+    eitherURL <- askURL (tag args)
+    case eitherURL of
         Left err -> putStrLn err
         Right url -> do
             dir <- getDir (directory args)
@@ -63,15 +59,11 @@ maybeDL args = do
             case firstpage of
                 Left _ -> putStrLn noInternet
                 Right val -> if noImagesExist val
-                                then putStrLn $ noImages url
-                                else do
-                    let lastpage = desiredSection start end getPageNum val
-                        urls = allURLs url lastpage
-                        start = "<section id='paginator'>"
-                        end = "</section"
-                    links <- takeNLinks args <$> getLinks urls putStrLn
-                    if disableasync args
-                        then niceDownload dir links putStrLn =<< newEmptyMVar
-                        else niceDownloadAsync dir links putStrLn 
-                             =<< newMVar []
-
+                    then putStrLn $ noImages url
+                    else do
+                        imageLinks <- getImageLinks url putStrLn
+                        if disableasync args
+                            then niceDownload dir imageLinks putStrLn 
+                                 =<< newEmptyMVar
+                            else niceDownloadAsync dir imageLinks putStrLn
+                                 =<< newMVar []

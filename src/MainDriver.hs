@@ -26,13 +26,8 @@ import Strings
 
 type URL = String
 
-{- Both r34MainCMD.hs and r34MainGUI.hs interface with this module mainly, with
-custom main functions, hence, it drives their main function. -}
-
-{- Start is the tag you want to find the links in, End is the closing tag,
-the function is for specifying what to get once the links have been isolated -}
 desiredSection :: String -> String -> ([[Attribute String]] -> a)
-                    -> String -> a
+               -> String -> a
 desiredSection start end f page = fromMain $ parseTags page
     where fromMain = f . getHyperLinks . local
           local = takeWhile (~/= end) . dropWhile (~/= start)
@@ -155,13 +150,11 @@ niceDownload dir links' logger timeToDie = niceDownload' links' 1
 
 --Check that images exist for the specified tag
 noImagesExist :: String -> Bool
-noImagesExist page
-    | null . findError $ parseTags page = False
-    | otherwise = True
+noImagesExist page = not $ null . findError $ parseTags page
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
 cleanUp :: MVar () -> (String -> IO ()) -> URL -> Either SomeException a
-           -> IO ()
+        -> IO ()
 cleanUp m logger link (Left err) = do
     logger $ downloadException link (show err)
     putMVar m ()
