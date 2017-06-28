@@ -1,4 +1,4 @@
-module Strings
+module Messages
 (
     emptyTag,
     noImagesGUI,
@@ -18,9 +18,8 @@ module Strings
 where
 
 import Utilities
-import Text.Printf
 
-type URL = String
+import Text.Printf
 
 emptyTag :: String
 emptyTag = "No tag selected. Please select one before downloading."

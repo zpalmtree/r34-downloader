@@ -4,15 +4,13 @@ module Links
 )
 where
 
+import Utilities
+import Messages
+
 import Text.HTML.TagSoup
 import Data.Char
 import Data.List
 import Control.Concurrent.Thread.Delay
-
-import Utilities
-import Strings
-
-type URL = String
 
 getPageURLs :: String -> URL -> [URL]
 getPageURLs soup url

@@ -5,14 +5,14 @@ module Find
 where
 
 import Utilities 
-import Strings
+import Messages
 
 import Control.Exception
 import Data.List hiding (find)
 import Data.Maybe
 import Data.Char
 
---We use &mincount=1 to add the smaller tags as well as the more popular ones
+-- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])
 find searchTerm'
     | null searchTerm = return $ Left invalidTag
