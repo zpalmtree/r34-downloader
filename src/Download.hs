@@ -5,17 +5,17 @@ module Download
 )
 where
 
-import Utilities
-import Messages
-
-import Network.HTTP
-import Network.URI
-import Control.Concurrent.Thread.Delay
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
-import Data.Maybe
-import qualified Data.ByteString as B
+import Utilities (URL, zipWithM3_, removeEscapeSequences, oneSecond)
+import Messages (downloading, downloadException)
+import Network.HTTP (defaultGETRequest_, getResponseBody, simpleHTTP)
+import Network.URI (parseURI)
+import Control.Concurrent.Thread.Delay (delay)
+import Control.Concurrent (MVar, ThreadId, forkIO, newEmptyMVar, takeMVar,
+                           forkFinally, modifyMVar_, isEmptyMVar, putMVar)
+import Control.Exception (SomeException, catch)
+import Control.Monad (when, replicateM)
+import Data.Maybe (fromJust)
+import qualified Data.ByteString as B (writeFile)
 
 -- Need to wait for all the file downloads to complete before returning,
 -- else the GUI will display "done" while the program is still downloading, and

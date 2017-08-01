@@ -15,9 +15,9 @@ module Utilities
 )
 where
 
-import Network.HTTP
-import Data.Foldable
-import Text.HTML.TagSoup
+import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
+import Data.Foldable (sequenceA_)
+import Text.HTML.TagSoup (parseTags, (~/=))
 
 type URL = String
 
@@ -84,5 +84,5 @@ maxComboBoxSize :: Int
 maxComboBoxSize = 200
 
 noImagesExist :: String -> Bool
-noImagesExist page = not $ null . findError $ parseTags page
+noImagesExist page = not . null . findError $ parseTags page
     where findError = dropWhile (~/= "<section id='Errormain'>")

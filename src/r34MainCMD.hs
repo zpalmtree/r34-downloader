@@ -42,7 +42,7 @@ handleInput :: String -> Either String URL
 handleInput input
     | null input = Left emptyInput
     | null $ scrub input = Left invalidTag
-    | otherwise = Right $ addBaseAddress $ scrub input
+    | otherwise = Right . addBaseAddress $ scrub input
 
 getDir :: FilePath -> IO FilePath
 getDir dir = do
@@ -69,7 +69,7 @@ download' args = do
 
 runEitherIO :: Either a b -> (b -> IO (Either a b)) -> IO (Either a b)
 runEitherIO (Right something) f = f something
-runEitherIO left _ = return $ left
+runEitherIO left _ = return left
 
 runEither :: Either a b -> (b -> Either a b) -> Either a b
 runEither (Right something) f = f something

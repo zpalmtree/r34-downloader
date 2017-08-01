@@ -4,19 +4,21 @@ module Main
 )
 where
 
-import Find
-import Utilities 
-import Download
-import Messages
-import Links
-
+import Find (find)
+import Utilities (scrub, openURL, noImagesExist, maxComboBoxSize)
+import Download (download, downloadAsync)
+import Messages (emptySearch, emptyTag, tooManyResults, noInternet, noImagesGUI,
+                 permissionError, addBaseAddress)
+import Links (getImageLinks)
+--too many things to individually import
 import Graphics.UI.Gtk hiding (response)
 import Data.Text (Text, pack, unpack)
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
-import System.Directory
-import Paths_rule34_paheal_downloader
+import Control.Concurrent (MVar, ThreadId, newMVar, newEmptyMVar, forkIO,
+                           takeMVar, killThread, putMVar)
+import Control.Exception (SomeException, try)
+import Control.Monad (void)
+import System.Directory (getCurrentDirectory, getPermissions, writable)
+import Paths_rule34_paheal_downloader (getDataFileName)
 
 main :: IO ()
 main = do
@@ -103,12 +105,12 @@ download' builder tag dialog threads timeToDie = do
 guiLogger :: MessageDialog -> String -> IO ()
 guiLogger dialog msg = postGUIAsync $ messageDialogSetMarkup dialog msg
 
-{- dialog is ran after childthread is created. This may be dangerous, if
-the function returns very quickly it could maybe? give a signal to the
-dialog to close before the dialog has been run. I'm not sure what will
-happen if this occurs, maybe a crash, or maybe the signal won't be
-recognised yet so the dialog will persist despite the operation having
-completed. -}
+-- dialog is ran after childthread is created. This may be dangerous, if
+-- the function returns very quickly it could maybe? give a signal to the
+-- dialog to close before the dialog has been run. I'm not sure what will
+-- happen if this occurs, maybe a crash, or maybe the signal won't be
+-- recognised yet so the dialog will persist despite the operation having
+-- completed. 
 cancelableAction :: Window -> String -> String ->
                     (MessageDialog -> MVar [ThreadId] -> MVar () ->
                     IO (Maybe String)) -> IO ()

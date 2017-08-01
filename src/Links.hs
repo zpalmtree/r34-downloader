@@ -4,13 +4,12 @@ module Links
 )
 where
 
-import Utilities
-import Messages
-
-import Text.HTML.TagSoup
-import Data.Char
-import Data.List
-import Control.Concurrent.Thread.Delay
+import Utilities (URL, openURL, oneSecond)
+import Messages (linksAdded)
+import Text.HTML.TagSoup (parseTags, isTagOpenName, (~/=), fromAttrib)
+import Data.Char (isNumber)
+import Data.List (isPrefixOf)
+import Control.Concurrent.Thread.Delay (delay)
 
 getPageURLs :: String -> URL -> [URL]
 getPageURLs soup url
@@ -22,17 +21,15 @@ getPageURLs soup url
           number = dropWhile (not . isNumber) link
 
 enumerate :: URL -> Int -> [URL]
-enumerate url num = map (\n -> stripped ++ show n) [1..num]
-    where stripped = init url
+enumerate url num = map (\n -> init url ++ show n) [1..num]
 
 getLinks :: String -> [URL]
-getLinks soup = links
+getLinks soup = filter isHyperLink $ map (fromAttrib "href") filtered
     where tags = parseTags soup
           taken = takeWhile (~/= "</section>")
           dropped = dropWhile (~/= "<section id='imagelist'>") tags
           trimmed = taken dropped
-          filtered = filter (isTagOpenName "a") $ trimmed
-          links = filter isHyperLink $ map (fromAttrib "href") filtered
+          filtered = filter (isTagOpenName "a") trimmed
           isHyperLink s = "http://" `isPrefixOf` s
 
 getImageLinks :: URL -> (String -> IO a) -> IO [URL]

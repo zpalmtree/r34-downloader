@@ -17,9 +17,8 @@ module Messages
 )
 where
 
-import Utilities
-
-import Text.Printf
+import Utilities (URL, allowedChars, maxComboBoxSize)
+import Text.Printf (printf)
 
 emptyTag :: String
 emptyTag = "No tag selected. Please select one before downloading."
