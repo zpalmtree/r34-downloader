@@ -4,13 +4,12 @@ module Find
 )
 where
 
-import Utilities 
-import Messages
-
-import Control.Exception
-import Data.List hiding (find)
-import Data.Maybe
-import Data.Char
+import Utilities (openURL, scrub, removeEscapeSequences)
+import Messages (invalidTag, noInternet, noTags)
+import Control.Exception (SomeException, try)
+import Data.List (isPrefixOf, stripPrefix)
+import Data.Maybe (mapMaybe)
+import Data.Char (toLower)
 
 -- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])
@@ -31,20 +30,13 @@ findTags searchTerm (Right page)
     | otherwise = Right tags
     where tags = filter (searchTerm `isPrefixOf`) $ getTags page
 
-{- list/ is immediately before the tag name in the string we extracted earlier
-then we take until the next / which terminates the tag -}
-isolate :: String -> String
-isolate page = takeWhile (/= '/') start
-    where start = myDrop "list/" page
-
---Gets the text remaining in the string after the searchTerm
-myDrop :: String -> String -> String
-myDrop searchTerm soup
-    | null maybeEnd = ""
-    | otherwise = fromJust . stripPrefix searchTerm $ head maybeEnd
-    where tails' = tails soup
-          maybeEnd = filter (searchTerm `isPrefixOf`) tails'
+isolateTag :: String -> String -> Maybe String
+isolateTag _ [] = Nothing
+isolateTag item xs
+    | item `isPrefixOf` xs = takeWhile (/= '/') <$> stripPrefix item xs
+    | otherwise = isolateTag item (tail xs)
 
 getTags :: String -> [String]
-getTags soup = map cleanup $ filter ("&nbsp;" `isPrefixOf`) $ lines soup
-    where cleanup = map toLower . removeEscapeSequences . isolate
+getTags soup = mapMaybe getTag . filter ("&nbsp;" `isPrefixOf`) $ lines soup
+    where getTag page = clean <$> isolateTag "list/" page
+          clean = map toLower . removeEscapeSequences
