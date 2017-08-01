@@ -27,11 +27,19 @@ Commands should be similar for other distributions.
 
 `cd rule34-paheal-downloader`
 
-#### Compile and run
+#### Compile
 
 `stack install`
 
-Then either add ~/.local/bin to your path and run the executable of your choice:
+If you get an error about your version of stack being too old, run `stack update --git` and then run `~/.local/bin/stack install`, assuming that is where stack installed itself to.
+
+Alternatively, source a version of stack-1.3.0 or higher, and use that instead.
+
+This is due to older version of stack being unable to parse GHC 8 output, and unable to build gtk2hs.
+
+#### Run
+
+Either add ~/.local/bin to your path and run the executable of your choice:
 
 `r34Downloader`
 `r34DownloaderGUI`
