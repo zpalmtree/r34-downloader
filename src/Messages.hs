@@ -1,4 +1,4 @@
-module Strings
+module Messages
 (
     emptyTag,
     noImagesGUI,
@@ -9,7 +9,6 @@ module Strings
     emptySearch,
     emptyInput,
     tooManyResults,
-    addBaseAddress,
     downloadException,
     downloading,
     linksAdded,
@@ -17,10 +16,8 @@ module Strings
 )
 where
 
-import Utilities
-import Text.Printf
-
-type URL = String
+import Utilities (URL, allowedChars, maxComboBoxSize)
+import Text.Printf (printf)
 
 emptyTag :: String
 emptyTag = "No tag selected. Please select one before downloading."
@@ -56,9 +53,6 @@ tooManyResults :: String
 tooManyResults = printf "Too many results found to be displayed. Truncated to \
                         \%d items. Please refine your search to see all the \
                         \results." maxComboBoxSize
-
-addBaseAddress :: String -> URL
-addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
 downloadException :: URL -> String -> String
 downloadException = printf "Error downloading %s - failed with exception %s"

@@ -14,11 +14,10 @@ data-files: src/r34GUI.glade
 executable r34DownloaderGUI
     main-is: r34MainGUI.hs
     build-depends: base >=4.9 && <4.10, HTTP, network-uri, tagsoup, bytestring, 
-                   directory, unbounded-delays, filepath, cmdargs, gtk3, glib, 
-                   text
+                   directory, unbounded-delays, filepath, gtk3, text
     default-language: Haskell2010
-    other-modules: Paths_rule34_paheal_downloader, Find, MainDriver, Strings, 
-                   Utilities
+    other-modules: Paths_rule34_paheal_downloader, Find, Messages, Utilities,
+                   Links, Download
     hs-source-dirs: src
     ghc-options: -threaded
 
@@ -28,6 +27,6 @@ executable r34Downloader
                    directory, unbounded-delays, filepath, cmdargs
     default-language: Haskell2010
     other-extensions: DeriveDataTypeable
-    other-modules: Find, MainDriver, ParseArgs, Strings, Utilities
+    other-modules: Find, ParseArgs, Messages, Utilities, Links, Download
     hs-source-dirs: src
     ghc-options: -threaded

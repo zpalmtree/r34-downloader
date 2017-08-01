@@ -1,43 +1,47 @@
-import Control.Exception
-import System.Console.CmdArgs (cmdArgs)
-import Control.Concurrent
-import System.IO
-import System.Directory
-import System.FilePath
-import ParseArgs 
-import MainDriver
-import Utilities 
-import Find
-import Strings
+module Main
+(
+    main
+)
+where
 
-type URL = String
+import ParseArgs (R34, r34, search, tag, directory, disableAsync)
+import Download (download, downloadAsync)
+import Utilities (URL, scrub, addBaseAddress, openURL, noImagesExist)
+import Find (find)
+import Messages (invalidTag, emptyInput, invalidTag, noInternet, noImages)
+import Links (getImageLinks)
+import Control.Exception (SomeException, try)
+import System.Console.CmdArgs (cmdArgs)
+import Control.Concurrent (newEmptyMVar, newMVar)
+import System.IO (hFlush, stdout)
+import System.Directory (doesDirectoryExist, getCurrentDirectory)
+import System.FilePath (addTrailingPathSeparator)
 
 main :: IO ()
-main = do
-    args <- cmdArgs r34
-    if null $ search args
-        then maybeDL args
-        else do
-            eitherResult <- find (search args)
-            either putStrLn (mapM_ putStrLn) eitherResult
+main = handleArgs =<< cmdArgs r34
+
+handleArgs :: R34 -> IO ()
+handleArgs args
+    | null $ search args = mapM_ putStrLn =<< download' args
+    | otherwise = either putStrLn (mapM_ putStrLn) =<< find (search args)
 
 askURL :: String -> IO (Either String URL)
 askURL tag'
     | null tag' = askURL'
-    | otherwise = if null $ scrub tag'
-                    then return $ Left invalidTag
-                    else return . Right $ addBaseAddress (scrub tag')
+    | null $ scrub tag' = return $ Left invalidTag
+    | otherwise = return . Right $ addBaseAddress (scrub tag')
 
 askURL' :: IO (Either String URL)
 askURL' = do
     putStr "Enter the tag which you wish to download: "
     hFlush stdout
-    input <- getLine
-    if null input
-        then return $ Left emptyInput
-        else if null $ scrub input
-            then return $ Left invalidTag
-            else return . Right $ addBaseAddress (scrub input)
+    handleInput <$> getLine
+
+handleInput :: String -> Either String URL
+handleInput input
+    | null input = Left emptyInput
+    | null $ scrub input = Left invalidTag
+    | otherwise = Right . addBaseAddress $ scrub input
 
 getDir :: FilePath -> IO FilePath
 getDir dir = do
@@ -47,31 +51,41 @@ getDir dir = do
         else a <$> getCurrentDirectory
     where a = addTrailingPathSeparator
 
-takeNLinks :: R34 -> [URL] -> [URL]
-takeNLinks r links
-    | first r <= 0 = links
-    | otherwise = take (first r) links
+download' :: R34 -> IO (Maybe String)
+download' args = do
+    url <- askURL (tag args)
+    dir <- getDir (directory args)
+    firstpage <- runEitherIO url openURLWrapped
+    let url' = runEither firstpage (checkForImages $ fromRight url)
+    case url' of
+        Left msg -> return $ Just msg
+        Right url'' -> do
+            imageLinks <- getImageLinks url'' putStrLn
+            if disableAsync args
+                then download dir imageLinks putStrLn =<< newEmptyMVar
+                else downloadAsync dir imageLinks putStrLn =<< newMVar []
+            return Nothing
 
-maybeDL :: R34 -> IO ()
-maybeDL args = do
-    eitherUrl <- askURL (tag args)
-    case eitherUrl of
-        Left err -> putStrLn err
-        Right url -> do
-            dir <- getDir (directory args)
-            firstpage <- try $ openURL url :: IO (Either SomeException String)
-            case firstpage of
-                Left _ -> putStrLn noInternet
-                Right val -> if noImagesExist val
-                                then putStrLn $ noImages url
-                                else do
-                    let lastpage = desiredSection start end getPageNum val
-                        urls = allURLs url lastpage
-                        start = "<section id='paginator'>"
-                        end = "</section"
-                    links <- takeNLinks args <$> getLinks urls putStrLn
-                    if disableasync args
-                        then niceDownload dir links putStrLn =<< newEmptyMVar
-                        else niceDownloadAsync dir links putStrLn 
-                             =<< newMVar []
+runEitherIO :: Either a b -> (b -> IO (Either a b)) -> IO (Either a b)
+runEitherIO (Right something) f = f something
+runEitherIO left _ = return left
 
+runEither :: Either a b -> (b -> Either a b) -> Either a b
+runEither (Right something) f = f something
+runEither left _ = left
+
+openURLWrapped :: URL -> IO (Either String String)
+openURLWrapped url = do
+    page <- try $ openURL url :: IO (Either SomeException String)
+    case page of
+        Left _ -> return $ Left noInternet
+        --need to update the implicit left type
+        Right str -> return $ Right str
+
+checkForImages :: URL -> String -> Either String String
+checkForImages url page
+    | noImagesExist page = Left (noImages url)
+    | otherwise = Right url
+
+fromRight :: Either a b -> b
+fromRight (Right val) = val

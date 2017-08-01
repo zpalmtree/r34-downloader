@@ -1,22 +1,31 @@
-import Graphics.UI.Gtk hiding (response)
+module Main
+(
+    main
+)
+where
 
+import Find (find)
+import Utilities (scrub, openURL, noImagesExist, maxComboBoxSize,
+                  addBaseAddress)
+import Download (download, downloadAsync)
+import Messages (emptySearch, emptyTag, tooManyResults, noInternet, noImagesGUI,
+                 permissionError)
+import Links (getImageLinks)
+--too many things to individually import
+import Graphics.UI.Gtk hiding (response)
 import Data.Text (Text, pack, unpack)
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
-import System.Directory
-import Paths_rule34_paheal_downloader
-import Find
-import Utilities 
-import MainDriver 
-import Strings
+import Control.Concurrent (MVar, ThreadId, newMVar, newEmptyMVar, forkIO,
+                           takeMVar, killThread, putMVar)
+import Control.Exception (SomeException, try)
+import Control.Monad (void)
+import System.Directory (getCurrentDirectory, getPermissions, writable)
+import Paths_rule34_paheal_downloader (getDataFileName)
 
 main :: IO ()
 main = do
     initGUI
 
     builder <- builderNew
-    -- getDataFileName gets the location of the installed .glade file.
     xmlLocation <- getDataFileName "src/r34GUI.glade"
     builderAddFromFile builder xmlLocation
 
@@ -43,7 +52,7 @@ searchGUI builder mainWindow = do
     if null entry
         then alert emptySearch mainWindow
         else cancelableAction mainWindow "Searching..." "Done!"
-                (search builder entry)
+             (search builder entry)
 
 downloadGUI :: Builder -> Window -> IO ()
 downloadGUI builder mainWindow = do
@@ -53,10 +62,10 @@ downloadGUI builder mainWindow = do
     case maybeTag of
         Nothing -> alert emptyTag mainWindow
         Just tag -> cancelableAction mainWindow "Downloading..." "Done!"
-                    (download builder (unpack tag))
+                    (download' builder (unpack tag))
 
 search :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
-          -> IO (Maybe String)
+       -> IO (Maybe String)
 search builder entry _ _ _ = do
     eitherResults <- fmap (map pack) <$> find entry
     case eitherResults of
@@ -67,9 +76,9 @@ search builder entry _ _ _ = do
                 then return Nothing
                 else return $ Just tooManyResults
 
-download :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
-            -> IO (Maybe String)
-download builder tag dialog threads timeToDie = do
+download' :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
+          -> IO (Maybe String)
+download' builder tag dialog threads timeToDie = do
     filePicker <- builderGetObject builder castToFileChooser "folderPicker"
     Just dir <- fmap (++ "/") <$> fileChooserGetFilename filePicker
     permissions <- getPermissions dir
@@ -80,22 +89,15 @@ download builder tag dialog threads timeToDie = do
         case firstpage of
             Left _ -> return $ Just noInternet
             Right val -> if noImagesExist val
-                            --sometimes tag can exist with no images
                             then return $ Just noImagesGUI
                             else do
-
-                let lastpage = desiredSection start end getPageNum val
-                    urls = allURLs url lastpage
-                    start = "<section id='paginator'>"
-                    end = "</section"
-
-                links <- getLinks urls (guiLogger dialog)
+                imageLinks <- getImageLinks url (guiLogger dialog)
                 checkButton <- builderGetObject builder castToCheckButton 
                                "asyncButton"
                 asyncDisabled <- toggleButtonGetActive checkButton
                 if asyncDisabled
-                    then niceDownload dir links (guiLogger dialog) timeToDie
-                    else niceDownloadAsync dir links (guiLogger dialog) threads
+                    then download dir imageLinks (guiLogger dialog) timeToDie
+                    else downloadAsync dir imageLinks (guiLogger dialog) threads
                 return Nothing
 
         else return $ Just permissionError
@@ -104,12 +106,12 @@ download builder tag dialog threads timeToDie = do
 guiLogger :: MessageDialog -> String -> IO ()
 guiLogger dialog msg = postGUIAsync $ messageDialogSetMarkup dialog msg
 
-{- dialog is ran after childthread is created. This may be dangerous, if
-the function returns very quickly it could maybe? give a signal to the
-dialog to close before the dialog has been run. I'm not sure what will
-happen if this occurs, maybe a crash, or maybe the signal won't be
-recognised yet so the dialog will persist despite the operation having
-completed. -}
+-- dialog is ran after childthread is created. This may be dangerous, if
+-- the function returns very quickly it could maybe? give a signal to the
+-- dialog to close before the dialog has been run. I'm not sure what will
+-- happen if this occurs, maybe a crash, or maybe the signal won't be
+-- recognised yet so the dialog will persist despite the operation having
+-- completed. 
 cancelableAction :: Window -> String -> String ->
                     (MessageDialog -> MVar [ThreadId] -> MVar () ->
                     IO (Maybe String)) -> IO ()
@@ -145,8 +147,8 @@ cancelableAction mainWindow initMsg completionMsg func = do
 
 alert :: String -> Window -> IO ()
 alert msg mainWindow = do
-    dialog <- messageDialogNew (Just mainWindow) []
-                MessageInfo ButtonsClose msg
+    dialog <- messageDialogNew (Just mainWindow) [] MessageInfo ButtonsClose
+              msg
     void $ dialogRun dialog
     widgetDestroy dialog
 
@@ -155,13 +157,13 @@ newDialog mainWindow = messageDialogNew (Just mainWindow) [] MessageInfo
 
 updateResultsBox :: [Text] -> Builder -> IO Bool
 updateResultsBox results builder
-    | length results > maxComboBoxSize = u >> return False
-    | otherwise = u >> return True
+    | length results > maxComboBoxSize = update >> return False
+    | otherwise = update >> return True
     where cappedResults = take maxComboBoxSize results
-          u = postGUIAsync updateResultsBox'
+          update = postGUIAsync updateResultsBox'
           updateResultsBox' = do
             resultsComboBox <- builderGetObject builder
-                                castToComboBox "resultsComboBox"
+                               castToComboBox "resultsComboBox"
             comboBoxSetModelText resultsComboBox
             mapM_ (comboBoxAppendText resultsComboBox) cappedResults
             comboBoxSetActive resultsComboBox 0

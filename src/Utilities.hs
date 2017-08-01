@@ -10,11 +10,15 @@ module Utilities
     zipWithM3_,
     maxComboBoxSize,
     scrub,
+    noImagesExist,
+    URL,
+    addBaseAddress
 )
 where
 
-import Network.HTTP
-import Data.Foldable
+import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
+import Data.Foldable (sequenceA_)
+import Text.HTML.TagSoup (parseTags, (~/=))
 
 type URL = String
 
@@ -24,14 +28,12 @@ filetypes = [".jpg", ".png", ".gif", ".jpeg", ".webm"]
 openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
 
---1 second in milliseconds
 oneSecond :: (Num a) => a
 oneSecond = 1000000
 
 scrub :: String -> String
 scrub = filter isAllowedChar . map replaceSpace
 
---comment for hlint, style checker
 --makes a lot more sense for this to be an array of characters than a string
 {-# ANN allowedChars "HLint: ignore" #-}
 allowedChars :: [Char]
@@ -41,7 +43,6 @@ allowedChars = ['_', '\'', '-', '.', ':', '@', '+'] ++ ['a'..'z'] ++
 isAllowedChar :: Char -> Bool
 isAllowedChar = flip elem allowedChars
 
---Replace spaces with underscores so tag searching is more user friendly
 replaceSpace :: Char -> Char
 replaceSpace ' ' = '_'
 replaceSpace c = c
@@ -82,3 +83,10 @@ zipWithM3_ f xs ys zs = sequenceA_ $ zipWith3 f xs ys zs
 
 maxComboBoxSize :: Int
 maxComboBoxSize = 200
+
+noImagesExist :: String -> Bool
+noImagesExist page = not . null . findError $ parseTags page
+    where findError = dropWhile (~/= "<section id='Errormain'>")
+
+addBaseAddress :: String -> URL
+addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"

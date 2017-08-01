@@ -71,13 +71,6 @@ Usage: `r34Downloader --tag=cute_anime_girl`
 
 This will download all images with the tag cute_anime_girl.
 
-#### -f / --first
-Specify the amount of images to download. Input should be a positive number.
-
-Usage: `r34Downloader -t=cute_anime_girl --first=10`
-
-This will download the first 10 images from the tag cute_anime_girl, if it exists.
-
 #### -? / --help
 Prints a help message.
 
