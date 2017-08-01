@@ -31,7 +31,13 @@ Commands should be similar for other distributions.
 
 `stack install`
 
-If you get an error about your version of stack being too old, run `stack update --git` and then run `~/.local/bin/stack install`, assuming that is where stack installed itself to.
+If you get an error about your version of stack being too old, run 
+
+`stack update --git` 
+
+and then run 
+
+`~/.local/bin/stack install`, assuming that is where stack installed itself to.
 
 Alternatively, source a version of stack-1.3.0 or higher, and use that instead.
 
@@ -55,7 +61,7 @@ to, and download it.
 
 What's that async disable button about? Well, the program attempts to start a 
 download every second, and when you're on a slow connection, that means a large
-amount of downloads build up. They seem to end timing out, and using a lot of memory.
+amount of downloads build up. They seem to end up timing out, and using a lot of memory.
 Check this box if your downloads are failing. It might be suggested to use it from the
 start if you have a slow connection.
 
