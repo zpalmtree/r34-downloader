@@ -27,9 +27,7 @@ Commands should be similar for other distributions.
 
 `cd rule34-paheal-downloader`
 
-#### Setup stack and compile
-
-`stack setup`
+#### Compile and run
 
 `stack install`
 
