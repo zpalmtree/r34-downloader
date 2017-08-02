@@ -5,10 +5,14 @@ import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 
 Window {
-    visible: true
     title: "Rule34 Downloader"
-    minimumHeight: 300
+    visible: true
+
+    minimumHeight: 400
+    maximumHeight: 400
+
     minimumWidth: 400
+    maximumWidth: 400
 
     MessageDialog {
         text: msgText
@@ -81,6 +85,36 @@ Window {
             Layout.fillWidth: true
             text: "Download"
             enabled: false
+        }
+
+        Label {
+            text: "Number of\nsimultaneous\ndownloads:"
+        }
+
+        ButtonGroup {
+            buttons: numDLs.children
+        }
+
+        RowLayout {
+            id: numDLs
+
+            CheckBox {
+                Layout.fillWidth: true
+                text: "1"
+            }
+            CheckBox {
+                Layout.fillWidth: true
+                text: "2"
+            }
+            CheckBox {
+                Layout.fillWidth: true
+                text: "4"
+            }
+            CheckBox {
+                Layout.fillWidth: true
+                text: "8"
+                checked: true
+            }
         }
     }
 }
