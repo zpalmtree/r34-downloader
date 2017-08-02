@@ -17,6 +17,10 @@ Window {
         standardButtons: msgButtons
     }
 
+    function enableDLButton() {
+        return tagComboBox.currentText != "" && folderPicker.folder != ""
+    }
+
     GridLayout {
         columns: 2
         anchors.fill: parent
@@ -30,7 +34,6 @@ Window {
         TextField {
             id: tagInput
             Layout.fillWidth: true
-            onTextChanged: searchButton.enabled = text != ""
         }
 
         Label {
@@ -40,7 +43,7 @@ Window {
             id: searchButton
             Layout.fillWidth: true
             text: "Search"
-            enabled: false
+            enabled: tagInput.text != ""
             onClicked: search(tagInput.text)
         }
 
@@ -48,8 +51,10 @@ Window {
             text: "Results:"
         }
         ComboBox {
+            id: tagComboBox
             model: searchResults
             Layout.fillWidth: true
+            onCurrentTextChanged: downloadButton.enabled = enableDLButton()
         }
 
         Label {
@@ -60,12 +65,12 @@ Window {
             Layout.fillWidth: true
             text: "Pick a directory"
             onClicked: folderPicker.visible = true
+            onTextChanged: downloadButton.enabled = enableDLButton()
         }
         FileDialog {
             id: folderPicker
             selectFolder: true
-
-            onAccepted: directoryPickerButton.text = folderPicker.folder
+            onAccepted: directoryPickerButton.text = folder
         }
 
         Label {
