@@ -7,9 +7,11 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ![Screenshot of program](r34downloader.png?raw=true "Screenshot of program")
 
-## Installation:
+GUI is being remade with QT Quick / QML. The current UI looks nicer, and will hopefully build on windows without too much issue.
 
-Windows isn't supported. I couldn't figure out how to get gtk/cairo to build.
+Currently only search is functional. Use the master branch right now.
+
+## Installation:
 
 #### Install prerequistes
 You need stack installed.
@@ -59,12 +61,6 @@ The GUI version should be pretty self explanatory. Enter a tag, search for it,
 select your chosen tag from the results, then choose the directory to download
 to, and download it.
 
-What's that async disable button about? Well, the program attempts to start a 
-download every second, and when you're on a slow connection, that means a large
-amount of downloads build up. They seem to end up timing out, and using a lot of memory.
-Check this box if your downloads are failing. It might be suggested to use it from the
-start if you have a slow connection.
-
 See the flags section to customize how you use the CMD version of the program.
 It will prompt you for a tag if you don't provide any arguments.
 
@@ -103,4 +99,4 @@ If a tag "cute_anime_girl" existed, it would be printed to the console, along wi
 Tag search is not case sensitive, so "cute", would also find tags beginning with "Cute", for example.
 
 #### --disableasync
-Disables asynchronous download. See the Running the program section for more info.
+Disables asynchronous download.

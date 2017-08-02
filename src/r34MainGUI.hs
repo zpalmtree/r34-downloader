@@ -4,166 +4,80 @@ module Main
 )
 where
 
+import Graphics.QML
+import Data.Text (pack, unpack)
 import Find (find)
-import Utilities (scrub, openURL, noImagesExist, maxComboBoxSize,
-                  addBaseAddress)
-import Download (download, downloadAsync)
-import Messages (emptySearch, emptyTag, tooManyResults, noInternet, noImagesGUI,
-                 permissionError)
-import Links (getImageLinks)
---too many things to individually import
-import Graphics.UI.Gtk hiding (response)
-import Data.Text (Text, pack, unpack)
-import Control.Concurrent (MVar, ThreadId, newMVar, newEmptyMVar, forkIO,
-                           takeMVar, killThread, putMVar)
-import Control.Exception (SomeException, try)
-import Control.Monad (void)
-import System.Directory (getCurrentDirectory, getPermissions, writable)
+import Control.Concurrent (forkIO)
+import Control.Exception (evaluate)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Paths_rule34_paheal_downloader (getDataFileName)
+import Control.Concurrent.Thread.Delay (delay)
 
 main :: IO ()
 main = do
-    initGUI
+    gui <- getDataFileName "src/main.qml"
 
-    builder <- builderNew
-    xmlLocation <- getDataFileName "src/r34GUI.glade"
-    builderAddFromFile builder xmlLocation
+    searchSignal <- newSignalKey
+    mbTextSignal <- newSignalKey :: IO (SignalKey (IO ()))
+    mbVisibleSignal <- newSignalKey
+    mbButtonsSignal <- newSignalKey :: IO (SignalKey (IO ()))
 
-    mainWindow <- builderGetObject builder castToWindow "mainWindow"
-    searchButton <- builderGetObject builder castToButton "searchButton"
-    downloadButton <- builderGetObject builder castToButton "downloadButton"
-    filePicker <- builderGetObject builder castToFileChooser "folderPicker"
+    searchState <- newIORef $ map pack [""]
+    mbTextState <- newIORef $ pack ""
+    mbVisibleState <- newIORef False
+    mbButtonsState <- newIORef $ pack "NoButton"
+    
+    rootClass <- newClass [
+        defPropertySigRO' "searchResults" searchSignal $ defRead searchState,
 
-    cwd <- getCurrentDirectory
-    void $ fileChooserSelectFilename filePicker cwd
+        defPropertySigRO' "msgText" mbTextSignal $ defRead mbTextState,
 
-    on mainWindow objectDestroy mainQuit
-    on searchButton buttonActivated $ searchGUI builder mainWindow
-    on downloadButton buttonActivated $ downloadGUI builder mainWindow
+        defPropertySigRO' "msgVisible" mbVisibleSignal $ defRead mbVisibleState,
 
-    widgetShowAll mainWindow
-    mainGUI
+        defPropertySigRO' "msgButtons" mbButtonsSignal $ defRead mbButtonsState,
 
-searchGUI :: Builder -> Window -> IO ()
-searchGUI builder mainWindow = do
-    searchInput <- builderGetObject builder castToEntry "searchInput"
-    entry <- entryGetText searchInput
-    entrySetText searchInput (scrub entry)
-    if null entry
-        then alert emptySearch mainWindow
-        else cancelableAction mainWindow "Searching..." "Done!"
-             (search builder entry)
+        defMethod' "search" (\this searchTerm -> do
+            writeIORef mbTextState (pack "Searching...")
+            writeIORef mbButtonsState (pack "NoButton")
 
-downloadGUI :: Builder -> Window -> IO ()
-downloadGUI builder mainWindow = do
-    resultsComboBox <- builderGetObject builder
-                        castToComboBox "resultsComboBox"
-    maybeTag <- comboBoxGetActiveText resultsComboBox
-    case maybeTag of
-        Nothing -> alert emptyTag mainWindow
-        Just tag -> cancelableAction mainWindow "Downloading..." "Done!"
-                    (download' builder (unpack tag))
+            let buttonBatch = do
+                    writeIORef mbVisibleState True
+                    fireSignal mbTextSignal this
+                    fireSignal mbButtonsSignal this
+                    fireSignal mbVisibleSignal this
 
-search :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
-       -> IO (Maybe String)
-search builder entry _ _ _ = do
-    eitherResults <- fmap (map pack) <$> find entry
-    case eitherResults of
-        Left msg -> return $ Just msg
-        Right results -> do
-            validLength <- updateResultsBox results builder
-            if validLength
-                then return Nothing
-                else return $ Just tooManyResults
+            buttonBatch
 
-download' :: Builder -> String -> MessageDialog -> MVar [ThreadId] -> MVar ()
-          -> IO (Maybe String)
-download' builder tag dialog threads timeToDie = do
-    filePicker <- builderGetObject builder castToFileChooser "folderPicker"
-    Just dir <- fmap (++ "/") <$> fileChooserGetFilename filePicker
-    permissions <- getPermissions dir
+            forkIO $ do
+                results <- find $ unpack searchTerm
+                case results of
+                    Left err -> do
+                        writeIORef mbVisibleState False
+                        fireSignal mbVisibleSignal this
 
-    if writable permissions
-        then do
-        firstpage <- try $ openURL url :: IO (Either SomeException String)
-        case firstpage of
-            Left _ -> return $ Just noInternet
-            Right val -> if noImagesExist val
-                            then return $ Just noImagesGUI
-                            else do
-                imageLinks <- getImageLinks url (guiLogger dialog)
-                checkButton <- builderGetObject builder castToCheckButton 
-                               "asyncButton"
-                asyncDisabled <- toggleButtonGetActive checkButton
-                if asyncDisabled
-                    then download dir imageLinks (guiLogger dialog) timeToDie
-                    else downloadAsync dir imageLinks (guiLogger dialog) threads
-                return Nothing
+                        --window doesn't reappear unless we delay a bit
+                        delay 100000
 
-        else return $ Just permissionError
-    where url = addBaseAddress tag
+                        writeIORef mbTextState (pack err)                 
+                        writeIORef mbButtonsState (pack "Ok")
+                        buttonBatch
+                        
+                    Right results' -> do
+                        evaluate results'
 
-guiLogger :: MessageDialog -> String -> IO ()
-guiLogger dialog msg = postGUIAsync $ messageDialogSetMarkup dialog msg
+                        writeIORef mbVisibleState False
+                        fireSignal mbVisibleSignal this
 
--- dialog is ran after childthread is created. This may be dangerous, if
--- the function returns very quickly it could maybe? give a signal to the
--- dialog to close before the dialog has been run. I'm not sure what will
--- happen if this occurs, maybe a crash, or maybe the signal won't be
--- recognised yet so the dialog will persist despite the operation having
--- completed. 
-cancelableAction :: Window -> String -> String ->
-                    (MessageDialog -> MVar [ThreadId] -> MVar () ->
-                    IO (Maybe String)) -> IO ()
-cancelableAction mainWindow initMsg completionMsg func = do
-    threads <- newMVar []
-    timeToDie <- newEmptyMVar
-    dialog <- newDialog mainWindow ButtonsCancel initMsg
-    childThread <- forkIO $ childTasks dialog threads timeToDie
-    response <- dialogRun dialog
-    widgetDestroy dialog
-    case response of
-        ResponseOk -> do
-            dialogDone <- newDialog mainWindow ButtonsClose completionMsg
-            void $ dialogRun dialogDone
-            widgetDestroy dialogDone
+                        writeIORef searchState (map pack results')
+                        fireSignal searchSignal this
+            return ())
+        ]
 
-        ResponseNo -> return ()
+    ctx <- newObject rootClass ()
 
-        --cancel or window closed
-        _ -> do
-            runningThreads <- takeMVar threads
-            mapM_ killThread runningThreads
-            putMVar timeToDie ()
-            killThread childThread
+    runEngineLoop defaultEngineConfig {
+        initialDocument = fileDocument gui,
+        contextObject = Just $ anyObjRef ctx
+    }
 
-    where childTasks dialog threads timeToDie = do
-                maybeErr <- func dialog threads timeToDie
-                case maybeErr of
-                    Nothing -> postGUIAsync $ dialogResponse dialog ResponseOk
-                    Just errMsg -> do
-                        postGUIAsync $ alert errMsg mainWindow
-                        postGUIAsync $ dialogResponse dialog ResponseNo
-
-alert :: String -> Window -> IO ()
-alert msg mainWindow = do
-    dialog <- messageDialogNew (Just mainWindow) [] MessageInfo ButtonsClose
-              msg
-    void $ dialogRun dialog
-    widgetDestroy dialog
-
-newDialog :: Window -> ButtonsType -> String -> IO MessageDialog
-newDialog mainWindow = messageDialogNew (Just mainWindow) [] MessageInfo
-
-updateResultsBox :: [Text] -> Builder -> IO Bool
-updateResultsBox results builder
-    | length results > maxComboBoxSize = update >> return False
-    | otherwise = update >> return True
-    where cappedResults = take maxComboBoxSize results
-          update = postGUIAsync updateResultsBox'
-          updateResultsBox' = do
-            resultsComboBox <- builderGetObject builder
-                               castToComboBox "resultsComboBox"
-            comboBoxSetModelText resultsComboBox
-            mapM_ (comboBoxAppendText resultsComboBox) cappedResults
-            comboBoxSetActive resultsComboBox 0
+    where defRead s _ = readIORef s
