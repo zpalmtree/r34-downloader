@@ -8,8 +8,8 @@ Window {
     title: "Rule34 Downloader"
     visible: true
 
-    minimumHeight: 400
-    maximumHeight: 400
+    minimumHeight: 300
+    maximumHeight: 300
 
     minimumWidth: 400
     maximumWidth: 400
@@ -85,36 +85,8 @@ Window {
             Layout.fillWidth: true
             text: "Download"
             enabled: false
-        }
-
-        Label {
-            text: "Number of\nsimultaneous\ndownloads:"
-        }
-
-        ButtonGroup {
-            buttons: numDLs.children
-        }
-
-        RowLayout {
-            id: numDLs
-
-            CheckBox {
-                Layout.fillWidth: true
-                text: "1"
-            }
-            CheckBox {
-                Layout.fillWidth: true
-                text: "2"
-            }
-            CheckBox {
-                Layout.fillWidth: true
-                text: "4"
-            }
-            CheckBox {
-                Layout.fillWidth: true
-                text: "8"
-                checked: true
-            }
+            onClicked: download(tagComboBox.currentText, folderPicker.folder)
+            //onClicked: download(tagComboBox.currentText)
         }
     }
 }

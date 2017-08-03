@@ -50,9 +50,10 @@ getImageLinks url logger = do
     --page 1 to page max links
     let pages = getPageURLs pageSoup url
     case pages of
-        Nothing -> desiredLink pageSoup
+        Nothing -> do
+            logger $ linksAdded 1
+            desiredLink pageSoup
         Just pages' -> downloadSoupAndExtractImageLinks logger pages' []
-
 
 downloadSoupAndExtractImageLinks :: (String -> IO a) -> [URL] -> [URL] 
                                   -> IO [URL]
