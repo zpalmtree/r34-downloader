@@ -14,13 +14,13 @@ Currently only search is functional. Use the master branch right now.
 ## Installation:
 
 #### Install prerequistes
-You need stack installed.
+You need stack installed, along with the qt quick controls and qt quick controls2.
 
 ##### Debian based:
-`sudo apt-get install haskell-stack`
+`sudo apt-get install haskell-stack qml-module-qtquick-controls qml-module-qtquick-controls2`
 
 ##### Arch based:
-`sudo pacman -S stack`
+`sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols2`
 
 Commands should be similar for other distributions.
 
@@ -29,8 +29,9 @@ Commands should be similar for other distributions.
 
 `cd rule34-paheal-downloader`
 
-#### Compile
+Alternatively, download the repo as a zip, unzip it, and move into the directory.
 
+#### Compile
 `stack install`
 
 If you get an error about your version of stack being too old, run 
@@ -41,9 +42,37 @@ and then run
 
 `~/.local/bin/stack install`, assuming that is where stack installed itself to.
 
-Alternatively, source a version of stack-1.3.0 or higher, and use that instead.
+Alternatively, source a version of stack-1.0.0 or higher, and use that instead.
 
-This is due to older version of stack being unable to parse GHC 8 output, and unable to build gtk2hs.
+This is due to older version of stack being unable to parse GHC 8 output.
+
+##### Windows [Currently broken]:
+Get stack here: https://www.stackage.org/stack/windows-x86_64-installer
+
+Run the stack executable with the default options.
+
+Get the qt quick controls here: http://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe
+
+For the qt setup, skip the account creation, and deselect everything but MinGW under the most recent version of Qt. Note down the version number, you'll need to edit some commands with the correct version later.
+
+Finish the install.
+
+Download the repo as a zip, unzip it, and move into the directory, then open a terminal there.
+
+Navigating to the directory in explorer, holding shift, and right clicking
+"Open command window here" lets you easily get a terminal in the right spot.
+
+`set PATH=%PATH%;C:\qt\5.9.1\mingw53_32\bin\`
+
+It might not be 5.9.1, depends on what version you installed.
+
+`stack install --extra-include-dirs=C:\Qt\5.9.1\mingw53_32\include\ --extra-lib-dirs=C:\Qt\5.9.1\mingw53_32\lib\`
+
+Again, might not be 5.9.1.
+
+This is as far as I've got before it dies with an error about realgcc.exe. I think it's because the gcc isn't taking input from the standard input for some reason. Not sure though.
+
+Obviously, this is quite length and error-prone. Once i've finished rewriting the GUI I'll try and make both linux and windows binaries so you don't have to bother with all this.
 
 #### Run
 
