@@ -14,7 +14,7 @@ import Control.Exception (evaluate, try, SomeException)
 import Data.IORef (newIORef, readIORef, writeIORef, IORef)
 import Control.Concurrent.Thread.Delay (delay)
 import System.Directory (getPermissions, writable)
-import Control.Monad (void)
+import Control.Monad (when, void)
 import Data.List (stripPrefix)
 
 import Find (find)
@@ -114,7 +114,9 @@ downloadMethod s this tag' folder' = do
 
     if not $ writable permissions
         then writeMsg s this permissionError "Ok"
+        --fork thread so GUI stays responsive
         else void . forkIO $ do
+            writeMsg s this "Finding links..." "Cancel"
             let url = addBaseAddress tag
             firstpage <- try $ openURL url :: IO (Either SomeException String)
             case firstpage of
@@ -148,5 +150,7 @@ hideMsg :: (MarshalMode tt IIsObjType () ~ Yes,
             MarshalMode tt ICanPassTo () ~ Yes, 
             Marshal tt) => StatesNSignals -> tt -> IO ()
 hideMsg s this = do
-    writeIORef (mbVisibleState s) False
-    fireSignal (mbVisibleSignal s) this
+    windowEnabled <- readIORef (mbVisibleState s)
+    when windowEnabled $ do
+        writeIORef (mbVisibleState s) False
+        fireSignal (mbVisibleSignal s) this
