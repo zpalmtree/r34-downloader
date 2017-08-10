@@ -1,29 +1,20 @@
 module Utilities
 (
     openURL,
-    filetypes,
     oneSecond,
-    isAllowedChar,
-    allowedChars,
-    replaceSpace,
     removeEscapeSequences,
-    zipWithM3_,
-    maxComboBoxSize,
     scrub,
     noImagesExist,
     URL,
-    addBaseAddress
+    addBaseAddress,
+    replaceSpace
 )
 where
 
 import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
-import Data.Foldable (sequenceA_)
 import Text.HTML.TagSoup (parseTags, (~/=))
 
 type URL = String
-
-filetypes :: [String]
-filetypes = [".jpg", ".png", ".gif", ".jpeg", ".webm"]
 
 openURL :: URL -> IO String
 openURL x = getResponseBody =<< simpleHTTP (getRequest x)
@@ -76,13 +67,6 @@ removeEscapeSequences ('%':a:b:rest) =
           go c = c : removeEscapeSequences rest
 
 removeEscapeSequences (c:cs) = c : removeEscapeSequences cs
-
-zipWithM3_ :: (Applicative m) => 
-              (a -> b -> c -> m d) -> [a] -> [b] -> [c] -> m ()
-zipWithM3_ f xs ys zs = sequenceA_ $ zipWith3 f xs ys zs
-
-maxComboBoxSize :: Int
-maxComboBoxSize = 200
 
 noImagesExist :: String -> Bool
 noImagesExist page = not . null . findError $ parseTags page
