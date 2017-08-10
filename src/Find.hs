@@ -5,7 +5,7 @@ module Find
 where
 
 import Utilities (openURL, scrub, removeEscapeSequences)
-import Messages (invalidTag, noInternet, noTags)
+import Messages (noInternet, noTags)
 import Control.Exception (SomeException, try)
 import Data.List (isPrefixOf, stripPrefix)
 import Data.Maybe (mapMaybe)
@@ -13,11 +13,9 @@ import Data.Char (toLower)
 
 -- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])
-find searchTerm'
-    | null searchTerm = return $ Left invalidTag
-    | otherwise = do
-        eitherPage <- try $ openURL url
-        return $ findTags searchTerm eitherPage
+find searchTerm' = do
+    eitherPage <- try $ openURL url
+    return $ findTags searchTerm eitherPage
     where searchTerm = scrub $ map toLower searchTerm'
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="

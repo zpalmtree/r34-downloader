@@ -1,15 +1,9 @@
 # rule34-paheal-downloader
 A program to download all the images of a given tag from https://rule34.paheal.net [Warning - Not Safe For Work]
 
-Comes with both a GUI and a CMD version.
-
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
 
 ![Screenshot of program](r34downloader.png?raw=true "Screenshot of program")
-
-GUI is being remade with QT Quick / QML. The current UI looks nicer, and will hopefully build on windows without too much issue.
-
-Currently only search is functional. Use the master branch right now.
 
 ## Installation:
 
@@ -76,56 +70,10 @@ Obviously, this is quite length and error-prone. Once i've finished rewriting th
 
 #### Run
 
-Either add ~/.local/bin to your path and run the executable of your choice:
+Either add ~/.local/bin to your path and run the executable:
 
 `r34Downloader`
-`r34DownloaderGUI`
 
 Or, run
 
 `stack exec r34Downloader`
-`stack exec r34DownloaderGUI`
-
-The GUI version should be pretty self explanatory. Enter a tag, search for it,
-select your chosen tag from the results, then choose the directory to download
-to, and download it.
-
-See the flags section to customize how you use the CMD version of the program.
-It will prompt you for a tag if you don't provide any arguments.
-
-## Flags:
-
-#### -t / --tag
-Specify a tag to download on the command line.
-
-Usage: `r34Downloader --tag=cute_anime_girl`
-
-This will download all images with the tag cute_anime_girl.
-
-#### -? / --help
-Prints a help message.
-
-Usage: `r34Downloader --help`
-
-This will output help on how to use the program.
-
-#### -d / --directory
-Lets you select the directory to download the images to. The directory must exist.
-If the directory does not exist, the program will fall back to the current working directory.
-
-Usage: `r34Downloader -t=cute_anime_girl --directory=/media/Pictures`
-
-This will download all images with the tag cute_anime_girl to the directory /media/Pictures, if it exists.
-
-If the directory does not exist, it will fall back to the current directory.
-
-#### -s / --search
-Lets you search for a tag if you don't know if it exists/the full name.
-
-Usage: `r34Downloader --search=cute`
-
-If a tag "cute_anime_girl" existed, it would be printed to the console, along with any other tags beginning with "cute".
-Tag search is not case sensitive, so "cute", would also find tags beginning with "Cute", for example.
-
-#### --disableasync
-Disables asynchronous download.

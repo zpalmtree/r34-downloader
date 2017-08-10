@@ -19,6 +19,7 @@ Window {
         title: "Notice"
         visible: msgVisible
         standardButtons: msgButtons
+        onRejected: cancel()
     }
 
     function enableDLButton() {
@@ -86,7 +87,6 @@ Window {
             text: "Download"
             enabled: false
             onClicked: download(tagComboBox.currentText, folderPicker.folder)
-            //onClicked: download(tagComboBox.currentText)
         }
     }
 }

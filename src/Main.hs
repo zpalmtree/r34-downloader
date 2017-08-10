@@ -9,18 +9,20 @@ where
 import Graphics.QML
 
 import Data.Text (pack, unpack, Text)
-import Control.Concurrent (forkIO)
-import Control.Exception (evaluate, try, SomeException)
+import Control.Concurrent (forkIO, killThread, newEmptyMVar, ThreadId, MVar, 
+                           tryTakeMVar, putMVar)
+import Control.Exception (try, SomeException)
 import Data.IORef (newIORef, readIORef, writeIORef, IORef)
 import Control.Concurrent.Thread.Delay (delay)
 import System.Directory (getPermissions, writable)
-import Control.Monad (when, void)
+import Control.Monad (when)
 import Data.List (stripPrefix)
 
 import Find (find)
-import Messages (permissionError, noInternet, noImagesGUI)
-import Utilities (addBaseAddress, noImagesExist, openURL)
+import Messages (permissionError, noInternet, noImages)
+import Utilities (addBaseAddress, noImagesExist, openURL, replaceSpace)
 import Links (getImageLinks)
+import Download (download)
 
 import Paths_rule34_paheal_downloader (getDataFileName)
 
@@ -37,6 +39,8 @@ data StatesNSignals = StatesNSignals {
 
 main :: IO ()
 main = do
+    thread <- newEmptyMVar
+
     gui <- getDataFileName "src/main.qml"
 
     searchSig <- newSignalKey
@@ -67,7 +71,9 @@ main = do
 
         defMethod' "search" (searchMethod s),
 
-        defMethod' "download" (downloadMethod s)]
+        defMethod' "download" (downloadMethod thread s),
+        
+        defMethod' "cancel" (cancelMethod thread s)]
 
     ctx <- newObject rootClass ()
 
@@ -90,13 +96,10 @@ searchMethod s this searchTerm = do
     writeMsg s this "Searching..." "NoButton"
 
     forkIO $ do
-        results <- find $ unpack searchTerm
+        results <- find . map replaceSpace $ unpack searchTerm
         case results of
             Left err -> writeMsg s this err "Ok"
             Right results' -> do
-                -- is this needed?
-                evaluate results'
-
                 hideMsg s this
 
                 writeIORef (searchState s) (map pack results')
@@ -105,8 +108,9 @@ searchMethod s this searchTerm = do
 
 downloadMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
                    MarshalMode tt IIsObjType () ~ Yes, 
-                   Marshal tt) => StatesNSignals -> tt -> Text -> Text -> IO ()
-downloadMethod s this tag' folder' = do
+                   Marshal tt) => MVar ThreadId -> StatesNSignals -> tt -> 
+                   Text -> Text -> IO ()
+downloadMethod threadMVar s this tag' folder' = do
     let tag = unpack tag'
         Just folder = fmap (++ "/") . stripPrefix "file://" $ unpack folder'
 
@@ -115,18 +119,19 @@ downloadMethod s this tag' folder' = do
     if not $ writable permissions
         then writeMsg s this permissionError "Ok"
         --fork thread so GUI stays responsive
-        else void . forkIO $ do
-            writeMsg s this "Finding links..." "Cancel"
-            let url = addBaseAddress tag
-            firstpage <- try $ openURL url :: IO (Either SomeException String)
-            case firstpage of
-                Left _ -> writeMsg s this noInternet "Ok"
-                Right val -> if noImagesExist val
-                    then writeMsg s this noImagesGUI "Ok"
-                    else do
-                        imageLinks <- getImageLinks url (guiLogger s this)
-                        print imageLinks
-                        hideMsg s this
+        else do
+            threadId <- forkIO $ do
+                writeMsg s this "Finding links..." "Cancel"
+                let url = addBaseAddress tag
+                firstpage <- try $ openURL url :: IO (Either SomeException String)
+                case firstpage of
+                    Left _ -> writeMsg s this noInternet "Ok"
+                    Right val -> if noImagesExist val
+                        then writeMsg s this noImages "Ok"
+                        else do
+                            imageLinks <- getImageLinks url (guiLogger s this)
+                            download folder imageLinks (guiLogger s this)
+            putMVar threadMVar threadId
 
 writeMsg :: (MarshalMode tt IIsObjType () ~ Yes, 
              MarshalMode tt ICanPassTo () ~ Yes, 
@@ -141,7 +146,6 @@ writeMsg s this msg buttonType = do
     writeIORef (mbButtonsState s) (pack buttonType)
     writeIORef (mbVisibleState s) True
 
-    --do we need to fire all signals, or just firing the visible will work?
     fireSignal (mbTextSignal s) this
     fireSignal (mbButtonsSignal s) this
     fireSignal (mbVisibleSignal s) this
@@ -154,3 +158,14 @@ hideMsg s this = do
     when windowEnabled $ do
         writeIORef (mbVisibleState s) False
         fireSignal (mbVisibleSignal s) this
+
+cancelMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
+                 MarshalMode tt IIsObjType () ~ Yes, 
+                 Marshal tt) => MVar ThreadId -> StatesNSignals -> tt -> IO ()
+cancelMethod threadMVar s this = do
+    maybeMVar <- tryTakeMVar threadMVar
+    case maybeMVar of
+        Nothing -> return ()
+        Just thread -> do
+            killThread thread
+            hideMsg s this
