@@ -6,7 +6,7 @@ where
 
 import Utilities (openURL, scrub, removeEscapeSequences)
 import Messages (noInternet, noTags)
-import Control.Exception (SomeException, try)
+import Control.Exception (IOException, try)
 import Data.List (isPrefixOf, stripPrefix)
 import Data.Maybe (mapMaybe)
 import Data.Char (toLower)
@@ -21,7 +21,7 @@ find searchTerm' = do
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
           
-findTags :: String -> Either SomeException String -> Either String [String]
+findTags :: String -> Either IOException String -> Either String [String]
 findTags _ (Left _) = Left noInternet
 findTags searchTerm (Right page)
     | null tags = Left noTags

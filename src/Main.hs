@@ -6,16 +6,20 @@ module Main
 )
 where
 
-import Graphics.QML
+import Graphics.QML (SignalKey, MarshalMode, IIsObjType, Yes, ICanPassTo, 
+                     Marshal, newSignalKey, newClass, defPropertySigRO', 
+                     defMethod', newObject, runEngineLoop, defaultEngineConfig,
+                     fileDocument, anyObjRef, fireSignal, initialDocument, 
+                     contextObject)
 
-import Data.Text (pack, unpack, Text)
-import Control.Concurrent (forkIO, killThread, newEmptyMVar, ThreadId, MVar, 
-                           tryTakeMVar, putMVar)
-import Control.Exception (try, SomeException)
-import Data.IORef (newIORef, readIORef, writeIORef, IORef)
+import Data.Text (Text, pack, unpack)
+import Control.Concurrent (ThreadId, MVar, forkIO, killThread, newEmptyMVar,
+                           tryTakeMVar, putMVar, isEmptyMVar, swapMVar)
+import Control.Exception (IOException, try)
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Control.Concurrent.Thread.Delay (delay)
 import System.Directory (getPermissions, writable)
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Data.List (stripPrefix)
 
 import Find (find)
@@ -34,13 +38,12 @@ data StatesNSignals = StatesNSignals {
     searchState :: IORef [Text],
     mbTextState :: IORef Text,
     mbVisibleState :: IORef Bool,
-    mbButtonsState :: IORef Text
+    mbButtonsState :: IORef Text,
+    threadMVar :: MVar ThreadId
 }
 
 main :: IO ()
 main = do
-    thread <- newEmptyMVar
-
     gui <- getDataFileName "src/main.qml"
 
     searchSig <- newSignalKey
@@ -53,8 +56,10 @@ main = do
     mbVisibleS <- newIORef False
     mbButtonsS <- newIORef $ pack "NoButton"
 
+    thread <- newEmptyMVar
+
     let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig
-                           searchS mbTextS mbVisibleS mbButtonsS
+                           searchS mbTextS mbVisibleS mbButtonsS thread
     
     rootClass <- newClass [
         defPropertySigRO' "searchResults" (searchSignal s) 
@@ -71,9 +76,9 @@ main = do
 
         defMethod' "search" (searchMethod s),
 
-        defMethod' "download" (downloadMethod thread s),
+        defMethod' "download" (downloadMethod s),
         
-        defMethod' "cancel" (cancelMethod thread s)]
+        defMethod' "cancel" (cancelMethod s)]
 
     ctx <- newObject rootClass ()
 
@@ -93,9 +98,9 @@ searchMethod :: (MarshalMode tt IIsObjType () ~ Yes,
                  MarshalMode tt ICanPassTo () ~ Yes, 
                  Marshal tt) => StatesNSignals -> tt -> Text -> IO ()
 searchMethod s this searchTerm = do
-    writeMsg s this "Searching..." "NoButton"
+    writeMsg s this "Searching..." "Cancel"
 
-    forkIO $ do
+    threadId <- forkIO $ do
         results <- find . map replaceSpace $ unpack searchTerm
         case results of
             Left err -> writeMsg s this err "Ok"
@@ -104,13 +109,17 @@ searchMethod s this searchTerm = do
 
                 writeIORef (searchState s) (map pack results')
                 fireSignal (searchSignal s) this
-    return ()
+
+    empty <- isEmptyMVar (threadMVar s)
+    if empty
+        then putMVar (threadMVar s) threadId
+        else void $ swapMVar (threadMVar s) threadId
 
 downloadMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
                    MarshalMode tt IIsObjType () ~ Yes, 
-                   Marshal tt) => MVar ThreadId -> StatesNSignals -> tt -> 
+                   Marshal tt) => StatesNSignals -> tt -> 
                    Text -> Text -> IO ()
-downloadMethod threadMVar s this tag' folder' = do
+downloadMethod s this tag' folder' = do
     let tag = unpack tag'
         Just folder = fmap (++ "/") . stripPrefix "file://" $ unpack folder'
 
@@ -118,12 +127,12 @@ downloadMethod threadMVar s this tag' folder' = do
 
     if not $ writable permissions
         then writeMsg s this permissionError "Ok"
-        --fork thread so GUI stays responsive
         else do
             threadId <- forkIO $ do
                 writeMsg s this "Finding links..." "Cancel"
                 let url = addBaseAddress tag
-                firstpage <- try $ openURL url :: IO (Either SomeException String)
+                firstpage <- try $ openURL url :: IO (Either IOException
+                                                             String)
                 case firstpage of
                     Left _ -> writeMsg s this noInternet "Ok"
                     Right val -> if noImagesExist val
@@ -131,16 +140,17 @@ downloadMethod threadMVar s this tag' folder' = do
                         else do
                             imageLinks <- getImageLinks url (guiLogger s this)
                             download folder imageLinks (guiLogger s this)
-            putMVar threadMVar threadId
+
+            empty <- isEmptyMVar (threadMVar s)
+            if empty
+                then putMVar (threadMVar s) threadId
+                else void $ swapMVar (threadMVar s) threadId
 
 writeMsg :: (MarshalMode tt IIsObjType () ~ Yes, 
              MarshalMode tt ICanPassTo () ~ Yes, 
              Marshal tt) => StatesNSignals -> tt -> String -> String -> IO ()
 writeMsg s this msg buttonType = do
     hideMsg s this
-
-    --window doesn't reappear unless we delay a bit
-    delay 1000
 
     writeIORef (mbTextState s) (pack msg)
     writeIORef (mbButtonsState s) (pack buttonType)
@@ -158,12 +168,14 @@ hideMsg s this = do
     when windowEnabled $ do
         writeIORef (mbVisibleState s) False
         fireSignal (mbVisibleSignal s) this
+        --window doesn't reappear unless we delay a bit
+        delay 1000
 
 cancelMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
                  MarshalMode tt IIsObjType () ~ Yes, 
-                 Marshal tt) => MVar ThreadId -> StatesNSignals -> tt -> IO ()
-cancelMethod threadMVar s this = do
-    maybeMVar <- tryTakeMVar threadMVar
+                 Marshal tt) => StatesNSignals -> tt -> IO ()
+cancelMethod s this = do
+    maybeMVar <- tryTakeMVar (threadMVar s)
     case maybeMVar of
         Nothing -> return ()
         Just thread -> do
