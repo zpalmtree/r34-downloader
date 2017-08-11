@@ -19,7 +19,7 @@ import Control.Exception (IOException, try)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Control.Concurrent.Thread.Delay (delay)
 import System.Directory (getPermissions, writable)
-import Control.Monad (when, void)
+import Control.Monad (when, void, unless)
 import Data.List (stripPrefix)
 
 import Find (find)
@@ -35,10 +35,12 @@ data StatesNSignals = StatesNSignals {
     mbTextSignal :: SignalKey (IO ()),
     mbVisibleSignal :: SignalKey (IO ()),
     mbButtonsSignal :: SignalKey (IO ()),
+    uiEnabledSignal :: SignalKey (IO ()),
     searchState :: IORef [Text],
     mbTextState :: IORef Text,
     mbVisibleState :: IORef Bool,
     mbButtonsState :: IORef Text,
+    uiEnabledState :: IORef Bool,
     threadMVar :: MVar ThreadId
 }
 
@@ -47,19 +49,21 @@ main = do
     gui <- getDataFileName "src/main.qml"
 
     searchSig <- newSignalKey
-    mbTextSig <- newSignalKey :: IO (SignalKey (IO ()))
+    mbTextSig <- newSignalKey
     mbVisibleSig <- newSignalKey
-    mbButtonsSig <- newSignalKey :: IO (SignalKey (IO ()))
+    mbButtonsSig <- newSignalKey
+    uiEnabledSig <- newSignalKey
 
     searchS <- newIORef $ map pack [""]
     mbTextS <- newIORef $ pack ""
     mbVisibleS <- newIORef False
     mbButtonsS <- newIORef $ pack "NoButton"
+    uiEnabledS <- newIORef True
 
     thread <- newEmptyMVar
 
-    let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig
-                           searchS mbTextS mbVisibleS mbButtonsS thread
+    let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig uiEnabledSig
+                           searchS mbTextS mbVisibleS mbButtonsS uiEnabledS thread
     
     rootClass <- newClass [
         defPropertySigRO' "searchResults" (searchSignal s) 
@@ -74,11 +78,16 @@ main = do
         defPropertySigRO' "msgButtons" (mbButtonsSignal s) 
                         $ defRead (mbButtonsState s),
 
+        defPropertySigRO' "uiEnabled" (uiEnabledSignal s)
+                        $ defRead (uiEnabledState s),
+
         defMethod' "search" (searchMethod s),
 
         defMethod' "download" (downloadMethod s),
         
-        defMethod' "cancel" (cancelMethod s)]
+        defMethod' "cancel" (cancelMethod s),
+        
+        defMethod' "markAsHidden" (markAsHiddenMethod s)]
 
     ctx <- newObject rootClass ()
 
@@ -98,6 +107,8 @@ searchMethod :: (MarshalMode tt IIsObjType () ~ Yes,
                  MarshalMode tt ICanPassTo () ~ Yes, 
                  Marshal tt) => StatesNSignals -> tt -> Text -> IO ()
 searchMethod s this searchTerm = do
+    disableUI s this
+
     writeMsg s this "Searching..." "Cancel"
 
     threadId <- forkIO $ do
@@ -109,6 +120,7 @@ searchMethod s this searchTerm = do
 
                 writeIORef (searchState s) (map pack results')
                 fireSignal (searchSignal s) this
+        enableUI s this
 
     empty <- isEmptyMVar (threadMVar s)
     if empty
@@ -129,6 +141,8 @@ downloadMethod s this tag' folder' = do
         then writeMsg s this permissionError "Ok"
         else do
             threadId <- forkIO $ do
+                disableUI s this
+
                 writeMsg s this "Finding links..." "Cancel"
                 let url = addBaseAddress tag
                 firstpage <- try $ openURL url :: IO (Either IOException
@@ -140,6 +154,8 @@ downloadMethod s this tag' folder' = do
                         else do
                             imageLinks <- getImageLinks url (guiLogger s this)
                             download folder imageLinks (guiLogger s this)
+
+                enableUI s this
 
             empty <- isEmptyMVar (threadMVar s)
             if empty
@@ -181,3 +197,28 @@ cancelMethod s this = do
         Just thread -> do
             killThread thread
             hideMsg s this
+    enableUI s this
+
+disableUI :: (MarshalMode tt ICanPassTo () ~ Yes, 
+              MarshalMode tt IIsObjType () ~ Yes, 
+              Marshal tt) => StatesNSignals -> tt -> IO ()
+disableUI s this = do
+    uiEnabled <- readIORef (uiEnabledState s)
+    when uiEnabled $ do
+        writeIORef (uiEnabledState s) False
+        fireSignal (uiEnabledSignal s) this
+
+enableUI :: (MarshalMode tt ICanPassTo () ~ Yes, 
+             MarshalMode tt IIsObjType () ~ Yes, 
+             Marshal tt) => StatesNSignals -> tt -> IO ()
+enableUI s this = do
+    uiEnabled <- readIORef (uiEnabledState s)
+    unless uiEnabled $ do
+        writeIORef (uiEnabledState s) True
+        fireSignal (uiEnabledSignal s) this
+
+-- when the user clicks OK/Cancel, it hides the message, but doesn't update
+-- the msgVisible property, hence windows don't do what is wanted after this
+-- we just need to manually update it when a button is clicked
+markAsHiddenMethod :: StatesNSignals -> t -> IO ()
+markAsHiddenMethod s _ = writeIORef (mbVisibleState s) False

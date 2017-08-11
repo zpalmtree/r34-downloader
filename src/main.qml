@@ -19,7 +19,8 @@ Window {
         title: "Notice"
         visible: msgVisible
         standardButtons: msgButtons
-        onRejected: cancel()
+        onRejected: markAsHidden(), cancel()
+        onAccepted: markAsHidden()
     }
 
     function enableDLButton() {
@@ -27,6 +28,7 @@ Window {
     }
 
     GridLayout {
+        enabled: uiEnabled
         columns: 2
         anchors.fill: parent
         anchors.margins: 10
