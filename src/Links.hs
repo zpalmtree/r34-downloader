@@ -52,6 +52,9 @@ getImageLinks url logger = do
     case pages of
         Nothing -> do
             logger $ linksAdded 1
+            --otherwise "1 link added to download" disappears in a fraction of
+            --a second, not very user friendly
+            delay oneSecond
             desiredLink pageSoup
         Just pages' -> downloadSoupAndExtractImageLinks logger pages' []
 

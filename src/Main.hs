@@ -155,6 +155,7 @@ downloadMethod s this tag' folder' = do
                             imageLinks <- getImageLinks url (guiLogger s this)
                             download folder imageLinks (guiLogger s this)
 
+                hideMsg s this
                 enableUI s this
 
             empty <- isEmptyMVar (threadMVar s)
