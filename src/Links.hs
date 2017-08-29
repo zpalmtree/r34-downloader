@@ -4,12 +4,14 @@ module Links
 )
 where
 
-import Utilities (URL, openURL, oneSecond)
-import Messages (linksAdded)
 import Text.HTML.TagSoup (parseTags, isTagOpenName, (~/=), fromAttrib)
+
 import Data.Char (isNumber)
 import Data.List (isPrefixOf)
-import Control.Concurrent.Thread.Delay (delay)
+import Control.Concurrent (threadDelay)
+
+import Utilities (URL, openURL, oneSecond)
+import Messages (linksAdded)
 
 getPageURLs :: String -> URL -> Maybe [URL] 
 getPageURLs soup url
@@ -54,7 +56,7 @@ getImageLinks url logger = do
             logger $ linksAdded 1
             --otherwise "1 link added to download" disappears in a fraction of
             --a second, not very user friendly
-            delay oneSecond
+            threadDelay oneSecond
             desiredLink pageSoup
         Just pages' -> downloadSoupAndExtractImageLinks logger pages' []
 
@@ -67,5 +69,5 @@ downloadSoupAndExtractImageLinks logger (page:pages) accumulator = do
     --image links
     let newAccumulator = getLinks soup ++ accumulator
     logger $ linksAdded (length newAccumulator)
-    delay oneSecond
+    threadDelay oneSecond
     downloadSoupAndExtractImageLinks logger pages newAccumulator

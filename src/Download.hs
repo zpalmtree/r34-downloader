@@ -4,14 +4,16 @@ module Download
 )
 where
 
-import Utilities (URL, removeEscapeSequences, oneSecond)
-import Messages (downloading, downloadException)
 import Network.HTTP (defaultGETRequest_, getResponseBody, simpleHTTP)
 import Network.URI (parseURI)
-import Control.Concurrent.Thread.Delay (delay)
+
+import Control.Concurrent (threadDelay)
 import Control.Exception (SomeException, try)
 import Data.Maybe (fromJust)
 import qualified Data.ByteString as B (writeFile)
+
+import Utilities (URL, removeEscapeSequences, oneSecond)
+import Messages (downloading, downloadException)
 
 download :: FilePath -> [URL] -> (URL -> IO ()) -> IO ()
 download dir links' logger = download' links' 1
@@ -27,7 +29,7 @@ download dir links' logger = download' links' 1
                    :: IO (Either SomeException ())
             case result of
                 Right () -> do
-                    delay oneSecond
+                    threadDelay oneSecond
                     download' links (x+1)
                 Left e -> logger $ downloadException link (show e)
 

@@ -4,12 +4,13 @@ module Find
 )
 where
 
-import Utilities (openURL, scrub, removeEscapeSequences)
-import Messages (noInternet, noTags)
 import Control.Exception (IOException, try)
 import Data.List (isPrefixOf, stripPrefix)
 import Data.Maybe (mapMaybe)
 import Data.Char (toLower)
+
+import Utilities (openURL, scrub, removeEscapeSequences)
+import Messages (noInternet, noTags)
 
 -- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])

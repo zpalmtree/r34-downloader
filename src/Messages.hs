@@ -10,8 +10,9 @@ module Messages
 )
 where
 
-import Utilities (URL)
 import Text.Printf (printf)
+
+import Utilities (URL)
 
 noImages :: String
 noImages = "No images were found with that tag. This is an error which \

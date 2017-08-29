@@ -13,11 +13,13 @@ import Graphics.QML (SignalKey, MarshalMode, IIsObjType, Yes, ICanPassTo,
                      contextObject)
 
 import Data.Text (Text, pack, unpack)
+
 import Control.Concurrent (ThreadId, MVar, forkIO, killThread, newEmptyMVar,
-                           tryTakeMVar, putMVar, isEmptyMVar, swapMVar)
+                           tryTakeMVar, putMVar, isEmptyMVar, swapMVar,
+                           threadDelay)
+
 import Control.Exception (IOException, try)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import Control.Concurrent.Thread.Delay (delay)
 import System.Directory (getPermissions, writable)
 import Control.Monad (when, void, unless)
 import Data.List (stripPrefix)
@@ -185,8 +187,8 @@ hideMsg s this = do
     when windowEnabled $ do
         writeIORef (mbVisibleState s) False
         fireSignal (mbVisibleSignal s) this
-        --window doesn't reappear unless we delay a bit
-        delay 1000
+        --window doesn't reappear unless we threadDelay a bit
+        threadDelay 1000
 
 cancelMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
                  MarshalMode tt IIsObjType () ~ Yes, 
