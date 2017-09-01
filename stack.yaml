@@ -5,5 +5,4 @@ packages:
 extra-deps:
 - hsqml-0.3.4.1
 install-ghc: true
-resolver: lts-9.0
-require-stack-version: '>= 1.3.0'
+resolver: lts-6.34
