@@ -29,6 +29,17 @@ Alternatively, download the repo as a zip, unzip it, and move into the directory
 `stack install`
 
 ##### Windows
+
+Currently the windows version seems to run pretty badly, hopefully I can mitigate this, unless it's an issue in hsqml.
+
+##### Precompiled
+
+The easiest way is to get the installer [here.](https://github.com/ZedPea/rule34-paheal-downloader/releases)
+
+Read on if you want to build from source.
+
+##### From source
+
 Get stack here and install it: https://www.stackage.org/stack/windows-i386-installer
 
 You must download the 32 bit version, 64 bit won't work with hsqml.
