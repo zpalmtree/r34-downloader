@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?define ProductVersion = "0.0.1"?>
+<?define ProductVersion = "0.0.2"?>
 <?define ProductUpgradeCode = "03b5e0fb-2b0b-4800-861e-8858c14a6433"?>
 <?define Manufacturer = "ZedPea"?>
 <?define AppName = "R34Downloader"?>
