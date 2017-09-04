@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?define ProductVersion = "0.0.1"?>
+<?define ProductUpgradeCode = "03b5e0fb-2b0b-4800-861e-8858c14a6433"?>
+<?define Manufacturer = "ZedPea"?>
+<?define AppName = "R34Downloader"?>
+<?define Exe = "r34Downloader.exe"?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+    <Product Id="*" UpgradeCode="$(var.ProductUpgradeCode)" Name="$(var.AppName)" Version="$(var.ProductVersion)" Manufacturer="$(var.Manufacturer)" Language="1033">
+        <Package InstallerVersion="200" Compressed="yes" Comments="Windows Installer Package"/>
+        <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
+
+        <MajorUpgrade Schedule="afterInstallValidate" AllowSameVersionUpgrades="yes" AllowDowngrades="no"  DowngradeErrorMessage="A newer version is already installed. Setup will now exit." /> 
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="PROGRAMFOLDER" Name="$(var.AppName)">
+                    <Directory Id="INSTALLDIR" Name="$(var.AppName)">
+                        <Component Id="MainApp">
+                            <File Id="MainAppExe" Source="InstallationFiles/$(var.Exe)"/>
+                        </Component>
+                    </Directory>
+                </Directory>
+            </Directory>
+                    
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ProgramMenuSubfolder" Name="$(var.AppName)">
+                    <Component Id="ApplicationShortcuts">
+                        <Shortcut Id="MainProgramShortcut" Name="$(var.AppName)" Description="$(var.AppName)" Target="[INSTALLDIR]$(var.Exe)" WorkingDirectory="INSTALLDIR"/>
+                        <RegistryValue Root="HKCU" Key="Software\$(var.Manufacturer)\$(var.AppName)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+                        <RemoveFolder Id="ProgramMenuSubfolder" On="uninstall"/>
+                    </Component>
+                </Directory>
+            </Directory>
+        </Directory>
+
+        <Property Id="WIXUI_INSTALLDIR" Value="PROGRAMFOLDER"/>
+
+        <Property Id="INSTALLDIR">
+            <RegistrySearch Key="SOFTWARE\$(var.Manufacturer)\$(var.AppName)" Root="HKLM" Type="raw" Id="INSTALLDIR_REGSEARCH" Name="Path"/>
+        </Property>
+
+        <DirectoryRef Id="INSTALLDIR">
+            <Component Id="RemoveBinFolder">
+                <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.Manufacturer)\$(var.AppName)" Name="Path" Type="string" Value="[INSTALLDIR]" KeyPath="yes"/>
+                <util:RemoveFolderEx On="uninstall" Property="INSTALLDIR"/>
+            </Component>
+        </DirectoryRef>
+
+        <DirectoryRef Id="PROGRAMFOLDER">
+            <!-- The folder with the binaries in will always be removed, but the R34Downloader folder will only be removed if empty,
+                 so if the user selects an already existing folder, files in it will not be removed other than the app files !-->
+            <Component Id="RemoveMainFolder" Guid="df83e71d-fc54-4826-953e-44f327841af4">
+                <RemoveFolder Id="RemoveMainFolderAction" On="uninstall"/>
+            </Component>
+        </DirectoryRef>
+
+        <Feature Id="Complete" Level="1">
+            <ComponentRef Id="MainApp"/>
+            <ComponentGroupRef Id="ComponentGroupId"/>
+            <ComponentRef Id="RemoveMainFolder"/>
+            <ComponentRef Id="RemoveBinFolder"/>
+            <ComponentRef Id="ApplicationShortcuts"/>
+        </Feature>
+
+        <UI>
+            <UIRef Id="WixUI_InstallDir"/>
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
+            <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+        </UI>
+
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch $(var.AppName) Now?"/>
+
+        <Property Id="WixShellExecTarget" Value="[#MainAppExe]"/>
+        <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes"/>
+
+    </Product>
+</Wix>

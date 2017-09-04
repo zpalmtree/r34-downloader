@@ -1,0 +1,121 @@
+InstallationFiles/
+├── libgcc_s_dw2-1.dll
+├── libstdc++-6.dll
+├── libwinpthread-1.dll
+├── main.qml
+├── platforms
+│   └── qwindows.dll
+├── Qt
+│   └── labs
+│       ├── folderlistmodel
+│       │   ├── qmldir
+│       │   └── qmlfolderlistmodelplugin.dll
+│       └── settings
+│           ├── qmldir
+│           └── qmlsettingsplugin.dll
+├── Qt5Core.dll
+├── Qt5Gui.dll
+├── Qt5Network.dll
+├── Qt5Qml.dll
+├── Qt5QuickControls2.dll
+├── Qt5Quick.dll
+├── Qt5QuickTemplates2.dll
+├── Qt5Widgets.dll
+├── QtQuick
+│   ├── Controls
+│   │   ├── ApplicationWindow.qml
+│   │   ├── Button.qml
+│   │   ├── ComboBox.qml
+│   │   ├── Menu.qml
+│   │   ├── Private
+│   │   │   ├── BasicButton.qml
+│   │   │   ├── BasicTableView.qml
+│   │   │   ├── CalendarUtils.js
+│   │   │   ├── CalendarUtils.jsc
+│   │   │   ├── ColumnMenuContent.qml
+│   │   │   ├── Control.qml
+│   │   │   ├── EditMenu_base.qml
+│   │   │   ├── EditMenu.qml
+│   │   │   ├── FocusFrame.qml
+│   │   │   ├── MenuContentItem.qml
+│   │   │   ├── MenuContentScroller.qml
+│   │   │   ├── MenuItemSubControls.qml
+│   │   │   ├── qmldir
+│   │   │   ├── ScrollBar.qml
+│   │   │   ├── ScrollViewHelper.qml
+│   │   │   ├── StackView.js
+│   │   │   ├── StackView.jsc
+│   │   │   ├── style.js
+│   │   │   ├── style.jsc
+│   │   │   ├── Style.qml
+│   │   │   ├── SystemPaletteSingleton.qml
+│   │   │   ├── TableViewItemDelegateLoader.qml
+│   │   │   ├── TableViewSelection.qml
+│   │   │   ├── TextHandle.qml
+│   │   │   ├── TextInputWithHandles.qml
+│   │   │   ├── TextSingleton.qml
+│   │   │   └── ToolMenuButton.qml
+│   │   ├── qmldir
+│   │   ├── qtquickcontrolsplugin.dll
+│   │   ├── ScrollView.qml
+│   │   ├── SplitView.qml
+│   │   ├── Styles
+│   │   │   ├── Base
+│   │   │   │   ├── ButtonStyle.qml
+│   │   │   │   └── images
+│   │   │   │       └── arrow-down.png
+│   │   │   ├── Desktop
+│   │   │   │   ├── ButtonStyle.qml
+│   │   │   │   ├── ComboBoxStyle.qml
+│   │   │   │   ├── FocusFrameStyle.qml
+│   │   │   │   ├── MenuStyle.qml
+│   │   │   │   ├── RowItemSingleton.qml
+│   │   │   │   ├── ScrollViewStyle.qml
+│   │   │   │   ├── TableViewStyle.qml
+│   │   │   │   ├── TextFieldStyle.qml
+│   │   │   │   └── ToolBarStyle.qml
+│   │   │   └── qmldir
+│   │   ├── TableViewColumn.qml
+│   │   ├── TableView.qml
+│   │   ├── TextField.qml
+│   │   ├── ToolBar.qml
+│   │   └── ToolButton.qml
+│   ├── Controls.2
+│   │   ├── Button.qml
+│   │   ├── ComboBox.qml
+│   │   ├── ItemDelegate.qml
+│   │   ├── Label.qml
+│   │   ├── qmldir
+│   │   ├── qtquickcontrols2plugin.dll
+│   │   ├── ScrollIndicator.qml
+│   │   └── TextField.qml
+│   ├── Dialogs
+│   │   ├── DefaultFileDialog.qml
+│   │   ├── dialogplugin.dll
+│   │   ├── Private
+│   │   │   ├── dialogsprivateplugin.dll
+│   │   │   └── qmldir
+│   │   ├── qml
+│   │   │   ├── DefaultWindowDecoration.qml
+│   │   │   ├── IconButtonStyle.qml
+│   │   │   ├── IconGlyph.qml
+│   │   │   ├── icons.ttf
+│   │   │   └── qmldir
+│   │   ├── qmldir
+│   │   └── WidgetMessageDialog.qml
+│   ├── Layouts
+│   │   ├── qmldir
+│   │   └── qquicklayoutsplugin.dll
+│   ├── PrivateWidgets
+│   │   ├── qmldir
+│   │   └── widgetsplugin.dll
+│   ├── Templates.2
+│   │   ├── qmldir
+│   │   └── qtquicktemplates2plugin.dll
+│   └── Window.2
+│       ├── qmldir
+│       └── windowplugin.dll
+├── QtQuick.2
+│   ├── qmldir
+│   └── qtquick2plugin.dll
+└── r34Downloader.exe
