@@ -28,26 +28,26 @@ Alternatively, download the repo as a zip, unzip it, and move into the directory
 #### Compile
 `stack install`
 
-If you get an error about your version of stack being too old, run 
+##### Windows
 
-`stack update --git` 
+Currently the windows version seems to run pretty badly, hopefully I can mitigate this, unless it's an issue in hsqml.
 
-and then run 
+##### Precompiled
 
-`~/.local/bin/stack install`, assuming that is where stack installed itself to.
+The easiest way is to get the installer [here.](https://github.com/ZedPea/rule34-paheal-downloader/releases)
 
-Alternatively, source a version of stack-1.0.0 or higher, and use that instead.
+Read on if you want to build from source.
 
-This is due to older version of stack being unable to parse GHC 8 output.
+##### From source
 
-##### Windows [Currently broken]:
-Get stack here: https://www.stackage.org/stack/windows-x86_64-installer
+Get stack here and install it: https://www.stackage.org/stack/windows-i386-installer
 
-Run the stack executable with the default options.
+You must download the 32 bit version, 64 bit won't work with hsqml.
 
 Get the qt quick controls here: http://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe
 
-For the qt setup, skip the account creation, and deselect everything but MinGW under the most recent version of Qt. Note down the version number, you'll need to edit some commands with the correct version later.
+For the qt setup, skip the account creation, and deselect everything but MinGW under the most recent version of Qt. 
+Note the version number.
 
 Finish the install.
 
@@ -60,13 +60,7 @@ Navigating to the directory in explorer, holding shift, and right clicking
 
 It might not be 5.9.1, depends on what version you installed.
 
-`stack install --extra-include-dirs=C:\Qt\5.9.1\mingw53_32\include\ --extra-lib-dirs=C:\Qt\5.9.1\mingw53_32\lib\`
-
-Again, might not be 5.9.1.
-
-This is as far as I've got before it dies with an error about realgcc.exe. I think it's because the gcc isn't taking input from the standard input for some reason. Not sure though.
-
-Obviously, this is quite length and error-prone. Once i've finished rewriting the GUI I'll try and make both linux and windows binaries so you don't have to bother with all this.
+`stack install`
 
 #### Run
 
@@ -77,3 +71,5 @@ Either add ~/.local/bin to your path and run the executable:
 Or, run
 
 `stack exec r34Downloader`
+
+This is the only option that will work on windows I believe.

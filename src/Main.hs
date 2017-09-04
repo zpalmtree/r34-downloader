@@ -23,6 +23,7 @@ import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import System.Directory (getPermissions, writable)
 import Control.Monad (when, void, unless)
 import Data.List (stripPrefix)
+import System.FilePath (normalise)
 
 import Find (find)
 import Messages (permissionError, noInternet, noImages)
@@ -135,7 +136,7 @@ downloadMethod :: (MarshalMode tt ICanPassTo () ~ Yes,
                    Text -> Text -> IO ()
 downloadMethod s this tag' folder' = do
     let tag = unpack tag'
-        Just folder = fmap (++ "/") . stripPrefix "file://" $ unpack folder'
+        Just folder = fmap (normalise . (++ "/")) . stripPrefix "file://" $ unpack folder'
 
     permissions <- getPermissions folder
 
