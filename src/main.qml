@@ -5,11 +5,13 @@ import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 
 Window {
+    property var uiIsEnabled: cancelDisabled
+
     title: "Rule34 Downloader"
     visible: true
 
-    minimumHeight: 300
-    maximumHeight: 300
+    minimumHeight: 350
+    maximumHeight: 350
 
     minimumWidth: 400
     maximumWidth: 400
@@ -21,10 +23,6 @@ Window {
         standardButtons: msgButtons
         onRejected: markAsHidden(), cancel()
         onAccepted: markAsHidden()
-    }
-
-    function enableDLButton() {
-        return tagComboBox.currentText != "" && folderPicker.folder != ""
     }
 
     GridLayout {
@@ -41,6 +39,7 @@ Window {
         TextField {
             id: tagInput
             Layout.fillWidth: true
+            enabled: uiIsEnabled
         }
 
         Label {
@@ -50,7 +49,7 @@ Window {
             id: searchButton
             Layout.fillWidth: true
             text: "Search"
-            enabled: tagInput.text != ""
+            enabled: tagInput.text != "" && uiIsEnabled
             onClicked: search(tagInput.text)
         }
 
@@ -61,7 +60,7 @@ Window {
             id: tagComboBox
             model: searchResults
             Layout.fillWidth: true
-            onCurrentTextChanged: downloadButton.enabled = enableDLButton()
+            enabled: uiIsEnabled
         }
 
         Label {
@@ -72,7 +71,7 @@ Window {
             Layout.fillWidth: true
             text: "Pick a directory"
             onClicked: folderPicker.visible = true
-            onTextChanged: downloadButton.enabled = enableDLButton()
+            enabled: uiIsEnabled
         }
         FileDialog {
             id: folderPicker
@@ -87,8 +86,31 @@ Window {
             id: downloadButton
             Layout.fillWidth: true
             text: "Download"
-            enabled: false
+
+            enabled: tagComboBox.currentText != "" &&
+                     folderPicker.folder != "" &&
+                     uiIsEnabled
+
             onClicked: download(tagComboBox.currentText, folderPicker.folder)
+        }
+
+        Label {
+            text: "Cancel:"
+        }
+        Button {
+            id: cancelButton
+            Layout.fillWidth: true
+            text: "Cancel current operation"
+            enabled: !uiIsEnabled
+            onClicked: cancel()
+        }
+
+        Label {
+            text: "Progress:"
+        }
+        ProgressBar {
+            value: progressBar
+            Layout.fillWidth: true
         }
     }
 }

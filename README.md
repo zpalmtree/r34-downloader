@@ -5,7 +5,7 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ![Screenshot of program](r34downloader.png?raw=true "Screenshot of program")
 
-## Installation (Linux):
+## Installation (Linux/Mac?):
 
 I don't have a mac to test, but if you can aquire the qt quick required files, I assume it will work.
 
@@ -42,8 +42,6 @@ Or, run
 
 
 ## Installation (Windows):
-
-Currently the windows version seems to run pretty badly, hopefully I can mitigate this, unless it's an issue in hsqml.
 
 #### Precompiled
 
