@@ -8,11 +8,25 @@ Or otherwise aquire the "Heat", "Candle", and "Light" executables.
 
 ## Aquire QT Files and .exe
 
+Firstly, follow the instructions for compliling from source on windows, in the readme.
+
+However, for the final step, instead of running 
+
+`stack install`
+
+instead, run
+
+`stack install --flag rule34-paheal-downloader:localqml`
+
 You need to distribute the QT files and dll's along with the .exe for it to successfully run.
 
 You can find the files you will need and where they need to be located in the [tree.txt](tree.txt) file.
 
-All these files will have been installed on your computer, provided you followed the building on source windows instructions.
+You need to place the files in tree.txt, inside a folder called InstallationFiles, which should be located in the same folder as the make.bat.
+
+All these files will have been installed on your computer, provided you followed the building on source windows instructions. 
+
+They should live in somewhere like: C:/Program Files (x86)/R34Downloader/R34Downloader/
 
 ## Make installer
 

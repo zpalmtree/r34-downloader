@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, CPP #-}
 
 module Main
 (
@@ -31,7 +31,11 @@ import Utilities (addBaseAddress, noImagesExist, openURL, replaceSpace)
 import Links (getImageLinks)
 import Download (download)
 
+#ifdef LOCALQML
 import Paths_rule34_paheal_downloader (getDataFileName)
+#else
+import Utilities (getDataFileName)
+#endif
 
 data StatesNSignals = StatesNSignals {
     searchSignal :: SignalKey (IO ()),
