@@ -32,9 +32,9 @@ import Links (getImageLinks)
 import Download (download)
 
 #ifdef LOCALQML
-import Paths_rule34_paheal_downloader (getDataFileName)
-#else
 import Utilities (getDataFileName)
+#else
+import Paths_rule34_paheal_downloader (getDataFileName)
 #endif
 
 data StatesNSignals = StatesNSignals {
