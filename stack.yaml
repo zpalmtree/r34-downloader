@@ -3,6 +3,6 @@ extra-package-dbs: []
 packages:
 - .
 extra-deps:
-- hsqml-0.3.4.1
+- hsqml-0.3.5.0
 install-ghc: true
-resolver: lts-6.34
+resolver: lts-9.6
