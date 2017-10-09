@@ -44,7 +44,7 @@ genericParser soup attrib sectionId openName = filter isHyperLink attribs
           filtered = filter (isTagOpenName openName) $ taken dropped
           isHyperLink s = "http://" `isPrefixOf` s
           attribs = map (fromAttrib attrib) filtered
-
+        
 getImageLinks :: URL -> (String -> IO a) -> IO [URL]
 getImageLinks url logger = do
     --the page 1 html
@@ -52,12 +52,7 @@ getImageLinks url logger = do
     --page 1 to page max links
     let pages = getPageURLs pageSoup url
     case pages of
-        Nothing -> do
-            logger $ linksAdded 1
-            --otherwise "1 link added to download" disappears in a fraction of
-            --a second, not very user friendly
-            threadDelay oneSecond
-            desiredLink pageSoup
+        Nothing -> desiredLink pageSoup
         Just pages' -> downloadSoupAndExtractImageLinks logger pages' []
 
 downloadSoupAndExtractImageLinks :: (String -> IO a) -> [URL] -> [URL] 

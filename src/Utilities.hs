@@ -7,7 +7,8 @@ module Utilities
     noImagesExist,
     URL,
     addBaseAddress,
-    replaceSpace
+    replaceSpace,
+    getDataFileName
 )
 where
 
@@ -74,3 +75,6 @@ noImagesExist page = not . null . findError $ parseTags page
 
 addBaseAddress :: String -> URL
 addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
+
+getDataFileName :: String -> IO String
+getDataFileName _ = return "main.qml"

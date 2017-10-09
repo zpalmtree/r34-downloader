@@ -5,7 +5,9 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ![Screenshot of program](r34downloader.png?raw=true "Screenshot of program")
 
-## Installation:
+## Installation (Linux/Mac?):
+
+I don't have a mac to test, but if you can aquire the qt quick required files, I assume it will work.
 
 #### Install prerequistes
 You need stack installed, along with the qt quick controls and qt quick controls2.
@@ -28,7 +30,27 @@ Alternatively, download the repo as a zip, unzip it, and move into the directory
 #### Compile
 `stack install`
 
-##### Windows
+#### Run
+
+Either add ~/.local/bin to your path and run the executable:
+
+`r34Downloader`
+
+Or, run
+
+`stack exec r34Downloader`
+
+
+## Installation (Windows):
+
+#### Precompiled
+
+The easiest way is to get the installer [here.](https://github.com/ZedPea/rule34-paheal-downloader/releases)
+
+Read on if you want to build from source.
+
+#### From source
+
 Get stack here and install it: https://www.stackage.org/stack/windows-i386-installer
 
 You must download the 32 bit version, 64 bit won't work with hsqml.
@@ -51,14 +73,13 @@ It might not be 5.9.1, depends on what version you installed.
 
 `stack install`
 
-#### Run
+#### Running
 
-Either add ~/.local/bin to your path and run the executable:
+If you used the installer, it should prompt you to run the program on exit
+It also will have created a shortcut in your start menu.
 
-`r34Downloader`
+If you built from source, run `stack exec r34Downloader`
 
-Or, run
+#### Creating an MSI
 
-`stack exec r34Downloader`
-
-This is the only option that will work on windows I believe.
+Check out the [build folder](build)

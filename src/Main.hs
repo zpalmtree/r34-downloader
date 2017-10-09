@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, CPP #-}
 
 module Main
 (
@@ -31,7 +31,11 @@ import Utilities (addBaseAddress, noImagesExist, openURL, replaceSpace)
 import Links (getImageLinks)
 import Download (download)
 
+#ifdef LOCALQML
 import Paths_rule34_paheal_downloader (getDataFileName)
+#else
+import Utilities (getDataFileName)
+#endif
 
 data StatesNSignals = StatesNSignals {
     searchSignal :: SignalKey (IO ()),
@@ -39,11 +43,15 @@ data StatesNSignals = StatesNSignals {
     mbVisibleSignal :: SignalKey (IO ()),
     mbButtonsSignal :: SignalKey (IO ()),
     uiEnabledSignal :: SignalKey (IO ()),
+    progressSignal :: SignalKey (IO ()),
+    cancelDisabledSignal :: SignalKey (IO ()),
     searchState :: IORef [Text],
     mbTextState :: IORef Text,
     mbVisibleState :: IORef Bool,
     mbButtonsState :: IORef Text,
     uiEnabledState :: IORef Bool,
+    progressState :: IORef Double,
+    cancelDisabledState :: IORef Bool,
     threadMVar :: MVar ThreadId
 }
 
@@ -56,17 +64,23 @@ main = do
     mbVisibleSig <- newSignalKey
     mbButtonsSig <- newSignalKey
     uiEnabledSig <- newSignalKey
+    progressSig <- newSignalKey
+    cancelDisabledSig <- newSignalKey
 
     searchS <- newIORef $ map pack [""]
     mbTextS <- newIORef $ pack ""
     mbVisibleS <- newIORef False
     mbButtonsS <- newIORef $ pack "NoButton"
     uiEnabledS <- newIORef True
+    progressS <- newIORef 0
+    cancelDisabledS <- newIORef True
 
     thread <- newEmptyMVar
 
-    let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig uiEnabledSig
-                           searchS mbTextS mbVisibleS mbButtonsS uiEnabledS thread
+    let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig 
+                           uiEnabledSig progressSig cancelDisabledSig searchS 
+                           mbTextS mbVisibleS mbButtonsS uiEnabledS progressS 
+                           cancelDisabledS thread
     
     rootClass <- newClass [
         defPropertySigRO' "searchResults" (searchSignal s) 
@@ -83,6 +97,12 @@ main = do
 
         defPropertySigRO' "uiEnabled" (uiEnabledSignal s)
                         $ defRead (uiEnabledState s),
+
+        defPropertySigRO' "progressBar" (progressSignal s)
+                        $ defRead (progressState s),
+
+        defPropertySigRO' "cancelDisabled" (cancelDisabledSignal s)
+                        $ defRead (cancelDisabledState s),
 
         defMethod' "search" (searchMethod s),
 
@@ -123,6 +143,7 @@ searchMethod s this searchTerm = do
 
                 writeIORef (searchState s) (map pack results')
                 fireSignal (searchSignal s) this
+
         enableUI s this
 
     empty <- isEmptyMVar (threadMVar s)
@@ -143,10 +164,10 @@ downloadMethod s this tag' folder' = do
     if not $ writable permissions
         then writeMsg s this permissionError "Ok"
         else do
+            setProgressBar s this 0
+
             threadId <- forkIO $ do
                 disableUI s this
-
-                writeMsg s this "Finding links..." "Cancel"
                 let url = addBaseAddress tag
                 firstpage <- try $ openURL url :: IO (Either IOException
                                                              String)
@@ -156,10 +177,17 @@ downloadMethod s this tag' folder' = do
                         then writeMsg s this noImages "Ok"
                         else do
                             imageLinks <- getImageLinks url (guiLogger s this)
-                            download folder imageLinks (guiLogger s this)
 
-                hideMsg s this
-                enableUI s this
+                            enableUI s this
+                            threadDelay 100000
+                            enableCancel s this
+                            hideMsg s this
+
+                            download folder imageLinks (setProgressBar s this) 
+                                                       (guiLogger s this)
+
+                disableCancel s this
+                setProgressBar s this 0
 
             empty <- isEmptyMVar (threadMVar s)
             if empty
@@ -201,7 +229,30 @@ cancelMethod s this = do
         Just thread -> do
             killThread thread
             hideMsg s this
-    enableUI s this
+
+            writeIORef (progressState s) 0
+            fireSignal (progressSignal s) this
+
+            disableCancel s this
+            enableUI s this
+
+enableCancel :: (MarshalMode tt ICanPassTo () ~ Yes, 
+                 MarshalMode tt IIsObjType () ~ Yes, 
+                 Marshal tt) => StatesNSignals -> tt -> IO ()
+enableCancel s this = do
+    cancelDisabled <- readIORef (cancelDisabledState s)
+    when cancelDisabled $ do
+        writeIORef (cancelDisabledState s) False
+        fireSignal (cancelDisabledSignal s) this
+
+disableCancel :: (MarshalMode tt ICanPassTo () ~ Yes, 
+                 MarshalMode tt IIsObjType () ~ Yes, 
+                 Marshal tt) => StatesNSignals -> tt -> IO ()
+disableCancel s this = do
+    cancelDisabled <- readIORef (cancelDisabledState s)
+    unless cancelDisabled $ do
+        writeIORef (cancelDisabledState s) True
+        fireSignal (cancelDisabledSignal s) this
 
 disableUI :: (MarshalMode tt ICanPassTo () ~ Yes, 
               MarshalMode tt IIsObjType () ~ Yes, 
@@ -226,3 +277,10 @@ enableUI s this = do
 -- we just need to manually update it when a button is clicked
 markAsHiddenMethod :: StatesNSignals -> t -> IO ()
 markAsHiddenMethod s _ = writeIORef (mbVisibleState s) False
+
+setProgressBar :: (MarshalMode tt IIsObjType () ~ Yes,
+                   MarshalMode tt ICanPassTo () ~ Yes,
+                   Marshal tt) => StatesNSignals -> tt -> Double -> IO ()
+setProgressBar s this n = do
+    writeIORef (progressState s) n
+    fireSignal (progressSignal s) this
