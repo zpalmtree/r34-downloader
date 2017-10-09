@@ -10,10 +10,10 @@ The website has a one request a second limit, thus users with fast internet conn
 I don't have a mac to test, but if you can aquire the qt quick required files, I assume it will work.
 
 #### Install prerequistes
-You need stack installed, along with the qt quick controls and qt quick controls2.
+You need stack installed, along with the qt quick controls and qt quick controls2. Look for the package that provides QtQuick/QML in your distro.
 
 ##### Debian based:
-`sudo apt-get install haskell-stack qml-module-qtquick-controls qml-module-qtquick-controls2`
+`sudo apt-get install haskell-stack qtdeclarative5-dev`
 
 ##### Arch based:
 `sudo pacman -S stack qt5-quickcontrols qt5-quickcontrols2`
