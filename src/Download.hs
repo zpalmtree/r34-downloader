@@ -4,7 +4,6 @@ module Download
 )
 where
 
-import Network.HTTP (defaultGETRequest_, getResponseBody, simpleHTTP)
 import Network.URI (parseURI)
 import Data.List (genericLength)
 import Control.Concurrent (threadDelay)
@@ -12,7 +11,11 @@ import Control.Exception (SomeException, try)
 import Data.Maybe (fromJust)
 import qualified Data.ByteString as B (writeFile)
 
-import Utilities (URL, removeEscapeSequences, oneSecond)
+import Network.HTTP 
+    (Response(..), HeaderName(..), defaultGETRequest_, getResponseBody,
+     rspHeaders, lookupHeader, simpleHTTP, getResponseCode)
+
+import Utilities (URL, removeEscapeSequences, oneSecond, addEscapeSequences)
 import Messages (downloadException)
 
 download :: Fractional i => FilePath -> [URL] -> (i -> IO a) -> 
@@ -38,11 +41,20 @@ download dir links' progressBar logger = download' links' 1
 --edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = do
-    img <- dlFile
-    B.writeFile filename img
+    response <- simpleHTTP request
+    code <- getResponseCode response
+    body <- getResponseBody response
+    case code of
+        --redirect, get new link and redownload
+        (3,0,2) -> case response of
+            Right r -> case lookupHeader HdrLocation $ rspHeaders r of
+                Nothing -> error "Couldn't find redirect link"
+                Just l -> downloadImage dir $ addEscapeSequences l
+            e -> error $ show e
+
+        _ -> B.writeFile filename body
     where filename = removeEscapeSequences $ name dir url
           request = defaultGETRequest_ . fromJust $ parseURI url
-          dlFile = getResponseBody =<< simpleHTTP request
 
 --truncated to 255 chars so it doesn't overflow max file name size
 name :: FilePath -> URL -> FilePath

@@ -8,7 +8,8 @@ module Utilities
     URL,
     addBaseAddress,
     replaceSpace,
-    getDataFileName
+    getDataFileName,
+    addEscapeSequences
 )
 where
 
@@ -38,6 +39,15 @@ isAllowedChar = flip elem allowedChars
 replaceSpace :: Char -> Char
 replaceSpace ' ' = '_'
 replaceSpace c = c
+
+addEscapeSequences :: String -> String
+addEscapeSequences [] = []
+addEscapeSequences (x:xs) =
+    case x of
+        ' ' -> go "%20"
+        _ -> go [x]
+
+    where go c = c ++ addEscapeSequences xs
 
 removeEscapeSequences :: String -> String
 removeEscapeSequences [] = []
