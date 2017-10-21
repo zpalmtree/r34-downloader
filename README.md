@@ -51,7 +51,7 @@ Read on if you want to build from source.
 
 #### From source
 
-Get stack here and install it: https://www.stackage.org/stack/windows-i386-installer
+Get stack here and install it with the default options: https://www.stackage.org/stack/windows-i386-installer
 
 You must download the 32 bit version, 64 bit won't work with hsqml.
 
@@ -60,6 +60,8 @@ Get the qt quick controls here: http://download.qt.io/official_releases/online_i
 For the qt setup, skip the account creation, and deselect everything but MinGW under the most recent version of Qt. 
 Note the version number.
 
+![Screenshot of Qt installation](qt-install.png?raw=true "Screenshot of Qt installation")
+
 Finish the install.
 
 Download the repo as a zip, unzip it, and move into the directory, then open a terminal there.
@@ -67,18 +69,18 @@ Download the repo as a zip, unzip it, and move into the directory, then open a t
 Navigating to the directory in explorer, holding shift, and right clicking
 "Open command window here" lets you easily get a terminal in the right spot.
 
-`set PATH=%PATH%;C:\qt\5.9.1\mingw53_32\bin\`
+`set PATH=%PATH%;C:\qt\5.9.2\mingw53_32\bin\`
 
-It might not be 5.9.1, depends on what version you installed.
+It might not be 5.9.2, depends on what version you installed.
 
 `stack install`
 
 #### Running
 
-If you used the installer, it should prompt you to run the program on exit
+If you used the installer, it should prompt you to run the program on exit.
 It also will have created a shortcut in your start menu.
 
-If you built from source, run `stack exec r34Downloader`
+If you built from source, run `stack exec r34Downloader` from a command prompt.
 
 #### Creating an MSI
 
