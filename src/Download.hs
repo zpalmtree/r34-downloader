@@ -8,7 +8,7 @@ import Network.URI (parseURI)
 import Data.List (genericLength)
 import Control.Concurrent (threadDelay)
 import Control.Exception (SomeException, try)
-import Data.Maybe (fromJust)
+import Text.Printf (printf)
 import qualified Data.ByteString as B (writeFile)
 
 import Network.HTTP 
@@ -33,28 +33,31 @@ download dir links' progressBar logger = download' links' 1
             progressBar (x / num)
 
             case result of
-                Right () -> do
+                Right _ -> do
                     threadDelay oneSecond
                     download' links (x+1)
-                Left e -> logger (downloadException link (show e))
+                Left e -> do
+                    logger (downloadException link (show e))
+                    download' links (x+1)
 
 --edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
-downloadImage dir url = do
-    response <- simpleHTTP request
-    code <- getResponseCode response
-    body <- getResponseBody response
-    case code of
-        --redirect, get new link and redownload
-        (3,0,2) -> case response of
-            Right r -> case lookupHeader HdrLocation $ rspHeaders r of
-                Nothing -> error "Couldn't find redirect link"
-                Just l -> downloadImage dir $ addEscapeSequences l
-            e -> error $ show e
+downloadImage dir url = case parseURI url of
+    Nothing -> printf "Error: Couldn't parse URL: %s\n" url
+    Just uri -> do
+        response <- simpleHTTP $ defaultGETRequest_ uri
+        code <- getResponseCode response
+        body <- getResponseBody response
+        case code of
+            --redirect, get new link and redownload
+            (3,0,2) -> case response of
+                Right r -> case lookupHeader HdrLocation $ rspHeaders r of
+                    Nothing -> putStrLn "Error: Couldn't find redirect link"
+                    Just l -> downloadImage dir $ addEscapeSequences l
+                e -> printf "Error: Unexpected response - %s\n" (show e)
 
-        _ -> B.writeFile filename body
+            _ -> B.writeFile filename body
     where filename = removeEscapeSequences $ name dir url
-          request = defaultGETRequest_ . fromJust $ parseURI url
 
 --truncated to 255 chars so it doesn't overflow max file name size
 name :: FilePath -> URL -> FilePath
