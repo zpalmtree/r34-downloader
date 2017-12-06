@@ -9,7 +9,7 @@ import Data.List (isPrefixOf, stripPrefix)
 import Data.Maybe (mapMaybe)
 import Data.Char (toLower)
 
-import Utilities (openURL, scrub, removeEscapeSequences)
+import Utilities (openURL, scrub, decodeURL)
 import Messages (noInternet, noTags)
 
 -- &mincount=1 gets all tags instead of just popular ones
@@ -38,4 +38,4 @@ isolateTag item xs
 getTags :: String -> [String]
 getTags soup = mapMaybe getTag . filter ("&nbsp;" `isPrefixOf`) $ lines soup
     where getTag page = clean <$> isolateTag "list/" page
-          clean = map toLower . removeEscapeSequences
+          clean = map toLower . decodeURL

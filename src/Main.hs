@@ -183,7 +183,8 @@ downloadMethod :: (MarshalMode tt ICanPassTo () ~ Yes,
                    Text -> Text -> IO ()
 downloadMethod s this tag' folder' = do
     let tag = unpack tag'
-        Just folder = fmap (normalise . (++ "/")) . stripPrefix "file://" $ unpack folder'
+        Just folder = fmap (normalise . (++ "/")) . stripPrefix "file://" 
+                        $ unpack folder'
 
     permissions <- getPermissions folder
 

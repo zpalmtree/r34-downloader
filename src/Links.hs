@@ -7,7 +7,7 @@ where
 import Text.HTML.TagSoup (parseTags, isTagOpenName, (~/=), fromAttrib)
 
 import Data.Char (isNumber)
-import Data.List (isPrefixOf)
+import Data.List (isPrefixOf, isInfixOf)
 import Control.Concurrent (threadDelay)
 
 import Utilities (URL, openURL, oneSecond)
@@ -16,13 +16,16 @@ import Messages (linksAdded)
 getPageURLs :: String -> URL -> Maybe [URL] 
 getPageURLs soup url
     | null links = Nothing
-    | all isNumber number = Just $ enumerate url (read number)
+    | isValid link && all isNumber number = Just $ enumerate url (read number)
     | otherwise = Just [url]
     where tags = parseTags soup
           links = filter (isTagOpenName "a") $ dropWhile (~/= "Random") tags
           link = fromAttrib "href" $ links !! 1
           number = dropWhile (not . isNumber) link
 
+isValid :: String -> Bool
+isValid = isInfixOf "/post/list/"
+            
 desiredLink :: String -> IO [URL]
 desiredLink redirect = do
     input <- openURL $ baseURL ++ num
