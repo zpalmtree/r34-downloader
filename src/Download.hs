@@ -37,11 +37,8 @@ download dir links' progressBar logger = download' links' 1
                 Right _ -> do
                     threadDelay oneSecond
                     download' links (x+1)
-                Left e -> do
-                    infoM "Prog.download" 
-                         ("Error: Download Exception - " ++ show e)
-
-                    logger (downloadException link (show e))
+                Left _ -> infoM "Prog.download" 
+                                ("Error: Download Exception - " ++ show e)
 
 --edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
