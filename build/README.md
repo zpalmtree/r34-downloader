@@ -36,6 +36,6 @@ You can manually edit the make file to point to your binaries if they're in a di
 
 Ensure you have removed all .qmlc files before running make.bat. They are created when you run the program, but are not needed to install it.
 
-Run make.bat.
+Run `make.bat`.
 
 Once you have successfully ran the make file and generated an .msi, you can safely delete all the other files, and distribute just the .msi.
