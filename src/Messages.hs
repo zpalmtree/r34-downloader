@@ -3,7 +3,6 @@ module Messages
     permissionError,
     noInternet,
     noTags,
-    downloadException,
     downloading,
     linksAdded,
     noImages
@@ -31,9 +30,6 @@ noInternet = "Sorry, we couldn't connect to the website. Check that it's not \
 
 noTags :: String
 noTags = "No tag found with that search term, please try again."
-
-downloadException :: URL -> String -> String
-downloadException = printf "Error downloading %s - failed with exception %s"
 
 downloading :: Int -> Int -> URL -> String
 downloading = printf "Downloading %d out of %d: %s"

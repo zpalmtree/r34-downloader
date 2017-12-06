@@ -8,7 +8,6 @@ import Network.URI (parseURI)
 import Data.List (genericLength)
 import Control.Concurrent (threadDelay)
 import Control.Exception (SomeException, try)
-import Text.Printf (printf)
 import System.Log.Logger (infoM)
 import qualified Data.ByteString as B (writeFile)
 
@@ -17,11 +16,9 @@ import Network.HTTP
      rspHeaders, lookupHeader, simpleHTTP, getResponseCode)
 
 import Utilities (URL, removeEscapeSequences, oneSecond, addEscapeSequences)
-import Messages (downloadException)
 
-download :: Fractional i => FilePath -> [URL] -> (i -> IO a) -> 
-            (String -> IO ()) -> IO ()
-download dir links' progressBar logger = download' links' 1
+download :: FilePath -> [URL] -> (Double -> IO a) -> IO ()
+download dir links' progressBar = download' links' 1
     where num = genericLength links'
           download' [] _ = return ()
           download' (link:links) x = do
@@ -43,7 +40,8 @@ download dir links' progressBar logger = download' links' 1
 --edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = case parseURI url of
-    Nothing -> printf "Error: Couldn't parse URL: %s\n" url
+    Nothing -> infoM "Prog.downloadImage" 
+                     ("Error: Couldn't parse URL - " ++ url)
     Just uri -> do
         response <- simpleHTTP $ defaultGETRequest_ uri
         code <- getResponseCode response

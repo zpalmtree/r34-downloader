@@ -214,7 +214,6 @@ downloadMethod s this tag' folder' = do
                             hideMsg s this
 
                             download folder imageLinks (setProgressBar s this) 
-                                                       (guiLogger s this)
 
                 disableCancel s this
                 setProgressBar s this 0
