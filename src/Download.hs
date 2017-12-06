@@ -42,7 +42,6 @@ download dir links' progressBar logger = download' links' 1
                          ("Error: Download Exception - " ++ show e)
 
                     logger (downloadException link (show e))
-                    download' links (x+1)
 
 --edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()

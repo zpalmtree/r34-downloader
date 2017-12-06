@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.20.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 893311a793d9deb6bc35952eb4f332d2dc9d6fe007eee323f3e87c4822552828
 
 name:           rule34-paheal-downloader
 version:        0.1.0.0
@@ -27,16 +29,16 @@ flag localqml
 executable r34Downloader
     main-is: Main.hs
     build-depends:
-        base >=4.8 && <4.10,
-        hsqml,
-        text,
         HTTP,
-        tagsoup,
-        directory,
+        base >=4.8 && <4.10,
         bytestring,
-        network-uri,
+        directory,
         filepath,
-        hslogger
+        hslogger,
+        hsqml,
+        network-uri,
+        tagsoup,
+        text
     if flag(localqml)
         cpp-options: -DLOCALQML
     if os(windows)
@@ -47,6 +49,7 @@ executable r34Downloader
         Links
         Messages
         Utilities
+        Paths_rule34_paheal_downloader
     default-language: Haskell2010
     hs-source-dirs:
         src
