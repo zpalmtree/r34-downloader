@@ -37,7 +37,7 @@ download dir links' progressBar logger = download' links' 1
                 Right _ -> do
                     threadDelay oneSecond
                     download' links (x+1)
-                Left _ -> infoM "Prog.download" 
+                Left e -> infoM "Prog.download" 
                                 ("Error: Download Exception - " ++ show e)
 
 --edited from http://stackoverflow.com/a/11514868
