@@ -18,12 +18,20 @@ import Control.Concurrent (ThreadId, MVar, forkIO, killThread, newEmptyMVar,
                            tryTakeMVar, putMVar, isEmptyMVar, swapMVar,
                            threadDelay)
 
+import System.Log.Handler.Simple (fileHandler)
+
+import System.Log.Logger
+    (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM,
+     addHandler, removeHandler)
+
 import Control.Exception (IOException, try)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import System.Directory (getPermissions, writable)
+import System.Directory (getPermissions, writable, getTemporaryDirectory)
+import System.IO (openTempFile, hClose)
 import Control.Monad (when, void, unless)
 import Data.List (stripPrefix)
 import System.FilePath (normalise)
+import System.Environment (getArgs)
 
 import Find (find)
 import Messages (permissionError, noInternet, noImages)
@@ -57,6 +65,22 @@ data StatesNSignals = StatesNSignals {
 
 main :: IO ()
 main = do
+    args <- getArgs
+
+    let level | "--debug" `elem` args = DEBUG
+              | otherwise = WARNING
+
+    -- don't log to stdout
+    updateGlobalLogger rootLoggerName removeHandler
+    updateGlobalLogger rootLoggerName (setLevel level)
+
+    when (level == DEBUG) $ do
+        tmpDir <- getTemporaryDirectory
+        (tmpFile, tmpHandle) <- openTempFile tmpDir "r34-downloader.log"
+        hClose tmpHandle
+        h <- fileHandler tmpFile DEBUG
+        updateGlobalLogger "Prog" (addHandler h)
+
     gui <- getDataFileName "src/main.qml"
 
     searchSig <- newSignalKey
@@ -137,7 +161,9 @@ searchMethod s this searchTerm = do
     threadId <- forkIO $ do
         results <- find . map replaceSpace $ unpack searchTerm
         case results of
-            Left err -> writeMsg s this err "Ok"
+            Left err -> do
+                infoM "Prog.searchMethod" ("Error: " ++ show err)
+                writeMsg s this err "Ok"
             Right results' -> do
                 hideMsg s this
 
@@ -162,7 +188,9 @@ downloadMethod s this tag' folder' = do
     permissions <- getPermissions folder
 
     if not $ writable permissions
-        then writeMsg s this permissionError "Ok"
+        then do
+            infoM "Prog.downloadMethod" "Error: Permission Error"
+            writeMsg s this permissionError "Ok"
         else do
             setProgressBar s this 0
 
@@ -172,7 +200,9 @@ downloadMethod s this tag' folder' = do
                 firstpage <- try $ openURL url :: IO (Either IOException
                                                              String)
                 case firstpage of
-                    Left _ -> writeMsg s this noInternet "Ok"
+                    Left _ -> do
+                        infoM "Prog.downloadMethod" "Error: No Internet"
+                        writeMsg s this noInternet "Ok"
                     Right val -> if noImagesExist val
                         then writeMsg s this noImages "Ok"
                         else do

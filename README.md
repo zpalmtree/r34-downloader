@@ -40,6 +40,15 @@ Or, run
 
 `stack exec r34Downloader`
 
+Add --debug to the the run command to make a log of errors in your tmp directory.
+
+For example:
+
+`r34Downloader --debug`
+
+Upon hitting an error, a file should be created in /tmp/ with a name similar to r34-downloaderXXXXX.log where XXXXX is a large string of numbers.
+
+In windows, you'll have to open a command prompt and run the exe manually to do this.
 
 ## Installation (Windows):
 
@@ -69,9 +78,11 @@ Download the repo as a zip, unzip it, and move into the directory, then open a t
 Navigating to the directory in explorer, holding shift, and right clicking
 "Open command window here" lets you easily get a terminal in the right spot.
 
-`set PATH=%PATH%;C:\qt\5.9.2\mingw53_32\bin\`
+`set PATH=%PATH%;C:\qt\5.9.3\mingw53_32\bin\`
 
-It might not be 5.9.2, depends on what version you installed.
+It might not be 5.9.3, depends on what version you installed.
+
+If you get an error about moc not being available, you probably didn't set the path or install QT correctly.
 
 `stack install`
 

@@ -1,0 +1,39 @@
+name: rule34-paheal-downloader
+version: '0.1.0.0'
+synopsis: Downloader for rule34.paheal.net with a GUI and CMD interface.
+category: Web
+author: ZedPea
+maintainer: z.palmer@openmailbox.org
+license: BSD3
+license-file: LICENSE.txt
+extra-source-files:
+- README.md
+dependencies:
+- base >=4.8 && <4.10
+- hsqml
+- text
+- HTTP
+- tagsoup
+- directory
+- bytestring
+- network-uri
+- filepath
+- hslogger
+executables:
+  r34Downloader:
+    main: Main.hs
+    source-dirs: src
+    ghc-options: -threaded
+    when:
+    - condition: flag(localqml)
+      cpp-options: -DLOCALQML
+    - condition: os(windows)
+      ghc-options: -optl-mwindows
+flags:
+  localqml:
+    description: Sources the qml file locally. Use this if you're compiling for the
+      msi installer.
+    manual: false
+    default: false
+data-files:
+- src/main.qml
