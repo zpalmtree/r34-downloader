@@ -21,7 +21,7 @@ getPageURLs soup url
     where tags = parseTags soup
           links = filter (isTagOpenName "a") $ dropWhile (~/= "Random") tags
           link = fromAttrib "href" $ links !! 1
-          number = dropWhile (not . isNumber) link
+          number = reverse . takeWhile isNumber $ reverse link
 
 isValid :: String -> Bool
 isValid = isInfixOf "/post/list/"

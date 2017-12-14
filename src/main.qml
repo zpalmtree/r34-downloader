@@ -11,10 +11,7 @@ Window {
     visible: true
 
     minimumHeight: 350
-    maximumHeight: 350
-
     minimumWidth: 400
-    maximumWidth: 400
 
     MessageDialog {
         text: msgText
