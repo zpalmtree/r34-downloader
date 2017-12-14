@@ -204,8 +204,11 @@ downloadMethod s this tag' folder' = do
                     Left _ -> do
                         infoM "Prog.downloadMethod" "Error: No Internet"
                         writeMsg s this noInternet "Ok"
+                        enableUI s this
                     Right val -> if noImagesExist val
-                        then writeMsg s this noImages "Ok"
+                        then do
+                            writeMsg s this noImages "Ok"
+                            enableUI s this
                         else do
                             imageLinks <- getImageLinks url (guiLogger s this)
 
