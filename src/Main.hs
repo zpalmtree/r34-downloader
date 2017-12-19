@@ -12,18 +12,13 @@ import Graphics.QML (SignalKey, MarshalMode, IIsObjType, Yes, ICanPassTo,
                      fileDocument, anyObjRef, fireSignal, initialDocument, 
                      contextObject)
 
-import Data.Text (Text, pack, unpack)
-
 import Control.Concurrent (ThreadId, MVar, forkIO, killThread, newEmptyMVar,
                            tryTakeMVar, putMVar, isEmptyMVar, swapMVar,
                            threadDelay)
 
+import Data.Text (Text, pack, unpack)
 import System.Log.Handler.Simple (fileHandler)
-
-import System.Log.Logger
-    (Priority(..), updateGlobalLogger, rootLoggerName, setLevel, infoM,
-     addHandler, removeHandler)
-
+import System.Log.Logger (Priority(..), updateGlobalLogger, infoM, addHandler)
 import Control.Exception (IOException, try)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import System.Directory (getPermissions, writable, getTemporaryDirectory)
@@ -35,7 +30,7 @@ import System.Environment (getArgs)
 
 import Find (find)
 import Messages (permissionError, noInternet, noImages)
-import Utilities (addBaseAddress, noImagesExist, openURL, replaceSpace)
+import Utilities (addBaseAddress, noImagesExist, openURL, scrub)
 import Links (getImageLinks)
 import Download (download)
 
@@ -69,10 +64,6 @@ main = do
 
     let level | "--debug" `elem` args = DEBUG
               | otherwise = WARNING
-
-    -- don't log to stdout
-    updateGlobalLogger rootLoggerName removeHandler
-    updateGlobalLogger rootLoggerName (setLevel level)
 
     when (level == DEBUG) $ do
         tmpDir <- getTemporaryDirectory
@@ -159,7 +150,7 @@ searchMethod s this searchTerm = do
     writeMsg s this "Searching..." "Cancel"
 
     threadId <- forkIO $ do
-        results <- find . map replaceSpace $ unpack searchTerm
+        results <- find . scrub $ unpack searchTerm
         case results of
             Left err -> do
                 infoM "Prog.searchMethod" ("Error: " ++ show err)

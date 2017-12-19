@@ -5,7 +5,9 @@ module Messages
     noTags,
     downloading,
     linksAdded,
-    noImages
+    noImages,
+    maxErrors,
+    downloadFail
 )
 where
 
@@ -36,3 +38,9 @@ downloading = printf "Downloading %d out of %d: %s"
 
 linksAdded :: Int -> String
 linksAdded = printf "%d links added to download..."
+
+maxErrors :: String
+maxErrors = "Error: Max errors in a row exceeded, terminating download"
+
+downloadFail :: Show a => a -> String
+downloadFail e = "Error: Download Exception - " ++ show e

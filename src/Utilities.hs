@@ -6,31 +6,40 @@ module Utilities
     scrub,
     noImagesExist,
     addBaseAddress,
-    replaceSpace,
     getDataFileName,
     encodeURL,
-    decodeURL
+    decodeURL,
+    maxErrorsAllowed
 )
 where
 
-import Network.HTTP (getResponseBody, simpleHTTP, getRequest)
+import Network.HTTP (Response(..), getRequest)
 import Network.URI (escapeURIString, isAllowedInURI, unEscapeString)
 import Text.HTML.TagSoup (parseTags, (~/=))
+
+import Network.Browser 
+    (browse, setCheckForProxy, request, setAllowRedirects, setOutHandler,
+     setErrHandler)
 
 type URL = String
 
 openURL :: URL -> IO String
-openURL x = getResponseBody =<< simpleHTTP (getRequest x)
+openURL x = rspBody . snd <$> browse (do
+    setCheckForProxy True
+    setAllowRedirects True
+    setOutHandler . const $ return ()
+    setErrHandler . const $ return ()
+    request $ getRequest x)
 
 oneSecond :: (Num a) => a
 oneSecond = 1000000
 
-scrub :: String -> String
-scrub = map replaceSpace
+-- if we've already errored maxErrors times, stop trying
+maxErrorsAllowed :: Integer
+maxErrorsAllowed = 5
 
-replaceSpace :: Char -> Char
-replaceSpace ' ' = '_'
-replaceSpace c = c
+scrub :: String -> String
+scrub = map (\x -> if x == ' ' then '_' else x)
 
 encodeURL :: URL -> URL
 encodeURL = escapeURIString isAllowedInURI
