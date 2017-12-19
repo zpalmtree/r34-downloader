@@ -1,4 +1,4 @@
-# rule34-paheal-downloader
+# r34-downloader
 A program to download all the images of a given tag from https://rule34.paheal.net [Warning - Not Safe For Work]
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
@@ -8,7 +8,7 @@ The website has a one request a second limit, thus users with fast internet conn
 ## Installation (Windows):
 
 #### Precompiled
-The easiest way is to get the installer [here.](https://github.com/ZedPea/rule34-paheal-downloader/releases)
+The easiest way is to get the installer [here.](https://github.com/ZedPea/r34-downloader/releases)
 
 Read on if you want to build from source.
 
@@ -64,9 +64,9 @@ Look for the package that provides QtQuick/QML in your distro.
 Commands should be similar for other distributions.
 
 #### Clone the repository
-`git clone https://github.com/ZedPea/rule34-paheal-downloader.git`
+`git clone https://github.com/ZedPea/r34-downloader.git`
 
-`cd rule34-paheal-downloader`
+`cd r34-downloader`
 
 Alternatively, download the repo as a zip, unzip it, and move into the directory.
 
