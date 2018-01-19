@@ -9,13 +9,17 @@ module Utilities
     getDataFileName,
     encodeURL,
     decodeURL,
-    maxErrorsAllowed
+    maxErrorsAllowed,
+    fixBrokenTagsSearch,
+    fixBrokenTagsDownload
 )
 where
 
 import Network.HTTP (Response(..), getRequest)
 import Network.URI (escapeURIString, isAllowedInURI, unEscapeString)
 import Text.HTML.TagSoup (parseTags, (~/=))
+import Data.Tuple (swap)
+import Data.Maybe (fromMaybe)
 
 import Network.Browser 
     (browse, setCheckForProxy, request, setAllowRedirects, setOutHandler,
@@ -56,3 +60,20 @@ addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
 getDataFileName :: String -> IO String
 getDataFileName _ = return "main.qml"
+
+fixBrokenTagsSearch :: String -> String
+fixBrokenTagsSearch x = fromMaybe x (lookup x brokenTags)
+
+fixBrokenTagsDownload :: [String] -> [String]
+fixBrokenTagsDownload = map (\y -> fromMaybe y (lookup y brokenTags'))
+    where brokenTags' = map swap brokenTags
+
+-- these tags, when the list of all tags are queried, return the latter value
+-- however, to download them, you need the former value
+-- we can't just replace - with _ and visa versa because this will break other
+-- tags, as there's no way to tell that _ is not the tag separator
+-- so for now, we just maintain a list of these broken tags, and make searching
+-- for the correct tag in the database or the viewable (on website) tag work,
+-- and that we download the correct tag.
+brokenTags :: [(String, String)]
+brokenTags = [("blend-s", "blend_s")]

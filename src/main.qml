@@ -7,7 +7,8 @@ import QtQuick.Dialogs 1.2
 Window {
     property var uiIsEnabled: cancelDisabled
 
-    title: "Rule34 Downloader"
+    // Remember to update me on each release!
+    title: "R34Downloader - v0.0.8"
     visible: true
 
     minimumHeight: 350

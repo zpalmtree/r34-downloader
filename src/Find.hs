@@ -9,15 +9,17 @@ import Data.List (isPrefixOf, stripPrefix)
 import Data.Maybe (mapMaybe)
 import Data.Char (toLower)
 
-import Utilities (openURL, scrub, decodeURL)
 import Messages (noInternet, noTags)
+
+import Utilities 
+    (openURL, scrub, decodeURL, fixBrokenTagsSearch, fixBrokenTagsDownload)
 
 -- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])
 find searchTerm' = do
     eitherPage <- try $ openURL url
     return $ findTags searchTerm eitherPage
-    where searchTerm = scrub $ map toLower searchTerm'
+    where searchTerm = fixBrokenTagsSearch . scrub $ map toLower searchTerm'
           firstChar = head searchTerm
           baseURL = "http://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
@@ -27,7 +29,8 @@ findTags _ (Left _) = Left noInternet
 findTags searchTerm (Right page)
     | null tags = Left noTags
     | otherwise = Right tags
-    where tags = filter (searchTerm `isPrefixOf`) $ getTags page
+    where tags = fixBrokenTagsDownload . filter (searchTerm `isPrefixOf`) 
+                    $ getTags page
 
 isolateTag :: String -> String -> Maybe String
 isolateTag _ [] = Nothing
