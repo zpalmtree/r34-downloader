@@ -204,11 +204,10 @@ downloadMethod s this tag' folder' = do
                             imageLinks <- getImageLinks url (guiLogger s this)
 
                             enableUI s this
-                            threadDelay 100000
                             enableCancel s this
                             hideMsg s this
 
-                            download folder imageLinks (setProgressBar s this) 
+                            download folder imageLinks (setProgressBar s this)
 
                 disableCancel s this
                 setProgressBar s this 0

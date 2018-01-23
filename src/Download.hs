@@ -8,6 +8,7 @@ import Network.URI (parseURI)
 import Data.List (genericLength)
 import Control.Exception (SomeException, try)
 import System.Log.Logger (infoM)
+import Control.Concurrent.Async (Async, wait, async)
 import qualified Data.ByteString as B (writeFile)
 
 import Network.Browser 
@@ -29,8 +30,10 @@ download dir links' progressBar = download' links' 1 0
             -- need to use try instead of catch, because catch spawns a new
             -- thread, which stops the cancel button from working, because it
             -- cancels the sub-thread spawned.
-            result <- try (downloadImage dir link) 
-                   :: IO (Either SomeException ())
+            
+            asyncThread <- async (try $ downloadImage dir link) 
+                        :: IO (Async (Either SomeException ()))
+            result <- wait asyncThread
 
             progressBar (x / num)
 

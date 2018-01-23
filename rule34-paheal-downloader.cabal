@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 893311a793d9deb6bc35952eb4f332d2dc9d6fe007eee323f3e87c4822552828
+-- hash: 929d2b3bf6230130fc808e00ffe2b6eefb5f718ce91ba049d90b65d8979e2267
 
 name:           rule34-paheal-downloader
 version:        0.1.0.0
@@ -30,6 +30,7 @@ executable r34Downloader
     main-is: Main.hs
     build-depends:
         HTTP,
+        async,
         base >=4.8 && <4.10,
         bytestring,
         directory,

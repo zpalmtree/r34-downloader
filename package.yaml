@@ -19,6 +19,7 @@ dependencies:
 - network-uri
 - filepath
 - hslogger
+- async
 executables:
   r34Downloader:
     main: Main.hs
