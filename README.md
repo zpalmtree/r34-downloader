@@ -5,6 +5,9 @@ The website has a one request a second limit, thus users with fast internet conn
 
 ![Screenshot of program](r34downloader.png?raw=true "Screenshot of program")
 
+I'm pretty busy with other projects, and since this is in a 'Good Enough' state, I don't plan to make anymore updates.
+If anyone wishes to make a PR, I'll review and merge them, and if you want maintainer status I'm happy to give that out.
+
 ## Installation (Windows):
 
 #### Precompiled
@@ -93,7 +96,7 @@ If you can run the program in debug mode, and attach the file created if it's no
 
 ### Linux
 
-`r34Downloader --tmp`
+`r34Downloader --debug`
 
 The file r34-downloaderXXXX where XXXX is a large string of numbers, will be created in /tmp/
 
