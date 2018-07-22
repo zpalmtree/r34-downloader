@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.21.2.
+-- This file has been generated from package.yaml by hpack version 0.28.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 929d2b3bf6230130fc808e00ffe2b6eefb5f718ce91ba049d90b65d8979e2267
+-- hash: d584312657e9aeb3026d3064f3508ad4edc436efa6868b10a43fd2390d96eae8
 
 name:           rule34-paheal-downloader
 version:        0.1.0.0
@@ -14,10 +14,8 @@ maintainer:     z.palmer@openmailbox.org
 synopsis:       Downloader for rule34.paheal.net with a GUI and CMD interface.
 category:       Web
 author:         ZedPea
-
 extra-source-files:
     README.md
-
 data-files:
     src/main.qml
 
@@ -37,6 +35,7 @@ executable r34Downloader
         filepath,
         hslogger,
         hsqml,
+        http-conduit,
         network-uri,
         tagsoup,
         text

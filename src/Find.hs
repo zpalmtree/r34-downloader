@@ -21,7 +21,7 @@ find searchTerm' = do
     return $ findTags searchTerm eitherPage
     where searchTerm = fixBrokenTagsSearch . scrub $ map toLower searchTerm'
           firstChar = head searchTerm
-          baseURL = "http://rule34.paheal.net/tags?starts_with="
+          baseURL = "https://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
           
 findTags :: String -> Either IOException String -> Either String [String]

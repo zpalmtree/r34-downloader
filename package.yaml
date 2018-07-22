@@ -20,6 +20,7 @@ dependencies:
 - filepath
 - hslogger
 - async
+- http-conduit
 executables:
   r34Downloader:
     main: Main.hs

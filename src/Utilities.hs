@@ -15,11 +15,12 @@ module Utilities
 )
 where
 
-import Network.HTTP (Response(..), getRequest)
 import Network.URI (escapeURIString, isAllowedInURI, unEscapeString)
+import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.TagSoup (parseTags, (~/=))
 import Data.Tuple (swap)
 import Data.Maybe (fromMaybe)
+import Data.ByteString.Lazy.Char8 (unpack)
 
 import Network.Browser 
     (browse, setCheckForProxy, request, setAllowRedirects, setOutHandler,
@@ -28,12 +29,7 @@ import Network.Browser
 type URL = String
 
 openURL :: URL -> IO String
-openURL x = rspBody . snd <$> browse (do
-    setCheckForProxy True
-    setAllowRedirects True
-    setOutHandler . const $ return ()
-    setErrHandler . const $ return ()
-    request $ getRequest x)
+openURL url = unpack <$> simpleHttp url
 
 oneSecond :: (Num a) => a
 oneSecond = 1000000
@@ -56,7 +52,7 @@ noImagesExist page = not . null . findError $ parseTags page
     where findError = dropWhile (~/= "<section id='Errormain'>")
 
 addBaseAddress :: String -> URL
-addBaseAddress xs = "http://rule34.paheal.net/post/list/" ++ xs ++ "/1"
+addBaseAddress xs = "https://rule34.paheal.net/post/list/" ++ xs ++ "/1"
 
 getDataFileName :: String -> IO String
 getDataFileName _ = return "main.qml"

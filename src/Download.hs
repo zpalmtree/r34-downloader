@@ -5,19 +5,13 @@ module Download
 where
 
 import Network.URI (parseURI)
+import Network.HTTP.Conduit (simpleHttp)
 import Data.List (genericLength)
 import Control.Exception (SomeException, try)
 import System.Log.Logger (infoM)
 import Control.Concurrent.Async (Async, wait, async)
 import qualified Data.ByteString as B (writeFile)
-
-import Network.Browser 
-    (browse, request, setCheckForProxy, setAllowRedirects, setOutHandler,
-     setErrHandler)
-
-import Network.HTTP 
-    (Response(..), HeaderName(..), defaultGETRequest_, rspHeaders, 
-     lookupHeader)
+import Data.ByteString.Lazy (toStrict)
 
 import Utilities (URL, encodeURL, decodeURL, maxErrorsAllowed)
 import Messages (maxErrors, downloadFail)
@@ -51,48 +45,7 @@ downloadImage dir url = case parseURI url of
     Nothing -> infoM "Prog.downloadImage" 
                    $ "Error: Couldn't parse URL - " ++ url
 
-    Just uri -> do
-        (_, response) <- browse $ do 
-            setCheckForProxy True
-            setAllowRedirects True
-            setOutHandler . const $ return ()
-            setErrHandler . const $ return ()
-            request $ defaultGETRequest_ uri
-
-        let code = rspCode response
-
-        case code of
-            -- 2xx Success, match this first for speed
-            (2,_,_) -> B.writeFile filename (rspBody response)
-
-            --redirect, get new link and redownload
-            (3,0,2) -> case lookupHeader HdrLocation $ rspHeaders response of
-                    Nothing -> infoM "Prog.downloadImage" 
-                                     "Error: Couldn't find redirect link"
-
-                    Just l -> downloadImage dir $ encodeURL l
-
-            -- 1xx Information
-            (1,_,_) -> infoM "Prog.downloadImage"
-                           $ "Error: Informational response code - " ++ 
-                              show code
-
-            -- 3xx Redirect
-            (3,_,_) -> infoM "Prog.downloadImage" 
-                           $ "Error: Currently unsupported redirect code - " ++ 
-                              show code
-
-            -- 4xx Client Error
-            (4,_,_) -> infoM "Prog.downloadImage"
-                           $ "Error: Client error code - " ++ show code
-
-            -- 5xx Server Error
-            (5,_,_) -> infoM "Prog.downloadImage"
-                           $ "Error: Server error code - " ++ show code
-
-            -- This probably will never happen?
-            _ -> infoM "Prog.downloadImage" 
-                     $ "Error: Unexpected error code - " ++ show code
+    Just uri -> B.writeFile filename =<< (toStrict <$> simpleHttp url)
 
     where filename = decodeURL $ name dir url
 

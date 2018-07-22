@@ -30,7 +30,7 @@ desiredLink :: String -> IO [URL]
 desiredLink redirect = do
     input <- openURL $ baseURL ++ num
     return $ genericParser input "action" "Image_Controlsleft" "form"
-    where baseURL = "http://rule34.paheal.net/post/view/"
+    where baseURL = "https://rule34.paheal.net/post/view/"
           num = takeWhile isNumber $ dropWhile (not . isNumber) redirect
 
 enumerate :: URL -> Int -> [URL]
@@ -45,7 +45,7 @@ genericParser soup attrib sectionId openName = filter isHyperLink attribs
           taken = takeWhile (~/= "</section>")
           dropped = dropWhile (~/= ("<section id='" ++ sectionId ++ "'>")) tags
           filtered = filter (isTagOpenName openName) $ taken dropped
-          isHyperLink s = "http://" `isPrefixOf` s
+          isHyperLink s = any (\x -> x `isPrefixOf` s) ["http://", "https://"]
           attribs = map (fromAttrib attrib) filtered
         
 getImageLinks :: URL -> (String -> IO a) -> IO [URL]
