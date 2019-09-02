@@ -12,6 +12,7 @@ import System.Log.Logger (infoM)
 import Control.Concurrent.Async (Async, wait, async)
 import qualified Data.ByteString as B (writeFile)
 import Data.ByteString.Lazy (toStrict)
+import System.FilePath (makeValid)
 
 import Utilities (URL, encodeURL, decodeURL, maxErrorsAllowed)
 import Messages (maxErrors, downloadFail)
@@ -47,7 +48,7 @@ downloadImage dir url = case parseURI url of
 
     Just uri -> B.writeFile filename =<< (toStrict <$> simpleHttp url)
 
-    where filename = decodeURL $ name dir url
+    where filename = makeValid $ decodeURL $ name dir url
 
 --truncated to 255 chars so it doesn't overflow max file name size
 name :: FilePath -> URL -> FilePath
