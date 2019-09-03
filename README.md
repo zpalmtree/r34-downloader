@@ -66,7 +66,7 @@ Look for the package that provides QtQuick/QML in your distro.
 Commands should be similar for other distributions.
 
 #### Clone the repository
-`git clone https://github.com/ZedPea/r34-downloader.git`
+`git clone https://github.com/zpalmtree/r34-downloader.git`
 
 `cd r34-downloader`
 
@@ -85,7 +85,7 @@ Or, run
 `stack exec r34Downloader`
 
 ## Bugs
-Please let me know if you find a bug, and I'll be happy to try and fix it, by opening an [issue](https://github.com/ZedPea/r34-downloader/issues/new)
+Please let me know if you find a bug, and I'll be happy to try and fix it, by opening an [issue](https://github.com/zpalmtree/r34-downloader/issues/new)
 
 
 ## Creating an MSI
