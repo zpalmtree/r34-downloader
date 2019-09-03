@@ -4,13 +4,13 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a092c407b7913432c98c2d37f7aabf76488773663f7efe5a4a14a103af28bc6b
+-- hash: ee652b16021442a4704dd9eefa7735f9e7445ff255e77f61d805c51429c8083f
 
 name:           rule34-paheal-downloader
-version:        0.1.0.0
+version:        0.1.1
 build-type:     Simple
-license:        BSD3
-license-file:   LICENSE.txt
+license:        GPL-3
+license-file:   LICENSE.md
 maintainer:     zpalmtree
 synopsis:       GUI downloader for rule34.paheal.net.
 category:       Web
