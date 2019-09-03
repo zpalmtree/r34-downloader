@@ -34,9 +34,9 @@ Download the repo as a zip, unzip it, and move into the directory, then open a t
 Navigating to the directory in explorer, holding shift, and right clicking
 "Open command window here" lets you easily get a terminal in the right spot.
 
-`set PATH=%PATH%;C:\qt\5.9.3\mingw53_32\bin\`
+`set PATH=%PATH%;C:\Qt\5.13.0\mingw73_32\bin`
 
-It might not be 5.9.3, depends on what version you installed.
+It might not be 5.13.0 or 73_32, depends on what version you installed. If you're not sure, just open the Qt folder and follow the paths down.
 
 If you get an error about moc not being available, you probably didn't set the path or install QT correctly.
 
