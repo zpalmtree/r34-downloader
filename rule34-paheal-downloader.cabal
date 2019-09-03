@@ -1,19 +1,20 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d584312657e9aeb3026d3064f3508ad4edc436efa6868b10a43fd2390d96eae8
+-- hash: a092c407b7913432c98c2d37f7aabf76488773663f7efe5a4a14a103af28bc6b
 
 name:           rule34-paheal-downloader
 version:        0.1.0.0
-cabal-version:  >= 1.10
 build-type:     Simple
 license:        BSD3
 license-file:   LICENSE.txt
-maintainer:     z.palmer@openmailbox.org
-synopsis:       Downloader for rule34.paheal.net with a GUI and CMD interface.
+maintainer:     zpalmtree
+synopsis:       GUI downloader for rule34.paheal.net.
 category:       Web
-author:         ZedPea
+author:         zpalmtree
 extra-source-files:
     README.md
 data-files:

@@ -1,9 +1,8 @@
 name: rule34-paheal-downloader
 version: '0.1.0.0'
-synopsis: Downloader for rule34.paheal.net with a GUI and CMD interface.
+synopsis: GUI downloader for rule34.paheal.net.
 category: Web
-author: ZedPea
-maintainer: z.palmer@openmailbox.org
+author: zpalmtree
 license: BSD3
 license-file: LICENSE.txt
 extra-source-files:
