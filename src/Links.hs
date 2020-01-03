@@ -9,6 +9,7 @@ import Text.HTML.TagSoup (parseTags, isTagOpenName, (~/=), fromAttrib)
 import Data.Char (isNumber)
 import Data.List (isPrefixOf, isInfixOf)
 import Control.Concurrent (threadDelay)
+import Network.HTTP.Conduit (HttpException)
 
 import Utilities (URL, openURL, oneSecond)
 import Messages (linksAdded)
@@ -26,12 +27,15 @@ getPageURLs soup url
 isValid :: String -> Bool
 isValid = isInfixOf "/post/list/"
             
-desiredLink :: String -> IO [URL]
+desiredLink :: String -> IO (Either HttpException [URL])
 desiredLink redirect = do
-    input <- openURL $ baseURL ++ num
-    return $ genericParser input "action" "Image_Controlsleft" "form"
+    response <- openURL $ baseURL ++ num
+    case response of
+      Left err -> return $ Left err
+      Right res -> return $ Right $ parseResponse res
     where baseURL = "https://rule34.paheal.net/post/view/"
           num = takeWhile isNumber $ dropWhile (not . isNumber) redirect
+          parseResponse res = genericParser res "action" "Image_Controlsleft" "form"
 
 enumerate :: URL -> Int -> [URL]
 enumerate url num = map (\n -> init url ++ show n) [1..num]
@@ -52,11 +56,14 @@ getImageLinks :: URL -> (String -> IO a) -> IO [URL]
 getImageLinks url logger = do
     --the page 1 html
     pageSoup <- openURL url
-    --page 1 to page max links
-    let pages = getPageURLs pageSoup url
-    case pages of
-        Nothing -> desiredLink pageSoup
-        Just pages' -> downloadSoupAndExtractImageLinks logger pages' []
+    case pageSoup of
+      Left _ -> return []
+      Right soup -> do
+        --page 1 to page max links
+        let pages = getPageURLs soup url
+        case pages of
+            Nothing -> either (const []) id <$> desiredLink soup
+            Just pages' -> downloadSoupAndExtractImageLinks logger pages' []
 
 downloadSoupAndExtractImageLinks :: (String -> IO a) -> [URL] -> [URL] 
                                   -> IO [URL]
@@ -64,8 +71,12 @@ downloadSoupAndExtractImageLinks _ [] accumulator = return accumulator
 downloadSoupAndExtractImageLinks logger (page:pages) accumulator = do
     --page html
     soup <- openURL page
-    --image links
-    let newAccumulator = getLinks soup ++ accumulator
-    logger $ linksAdded (length newAccumulator)
-    threadDelay oneSecond
-    downloadSoupAndExtractImageLinks logger pages newAccumulator
+
+    case soup of
+      Left err -> return [] 
+      Right res -> do
+        --image links
+        let newAccumulator = getLinks res ++ accumulator
+        logger $ linksAdded (length newAccumulator)
+        threadDelay oneSecond
+        downloadSoupAndExtractImageLinks logger pages newAccumulator

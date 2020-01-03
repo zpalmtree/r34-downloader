@@ -16,20 +16,17 @@ module Utilities
 where
 
 import Network.URI (escapeURIString, isAllowedInURI, unEscapeString)
-import Network.HTTP.Conduit (simpleHttp)
+import Network.HTTP.Conduit (simpleHttp, HttpException)
 import Text.HTML.TagSoup (parseTags, (~/=))
 import Data.Tuple (swap)
 import Data.Maybe (fromMaybe)
-import Data.ByteString.Lazy.Char8 (unpack)
-
-import Network.Browser 
-    (browse, setCheckForProxy, request, setAllowRedirects, setOutHandler,
-     setErrHandler)
+import Data.ByteString.Lazy.Char8 (unpack, ByteString)
+import Control.Exception (try)
 
 type URL = String
 
-openURL :: URL -> IO String
-openURL url = unpack <$> simpleHttp url
+openURL :: URL -> IO (Either HttpException String)
+openURL url = fmap unpack <$> (try (simpleHttp url) :: IO (Either HttpException ByteString))
 
 oneSecond :: (Num a) => a
 oneSecond = 1000000

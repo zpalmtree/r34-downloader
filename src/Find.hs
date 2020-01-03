@@ -17,16 +17,17 @@ import Utilities
 -- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])
 find searchTerm' = do
-    eitherPage <- try $ openURL url
-    return $ findTags searchTerm eitherPage
+    result <- openURL url
+    return $ case result of
+      Left err -> Left $ show err
+      Right res -> findTags searchTerm res
     where searchTerm = fixBrokenTagsSearch . scrub $ map toLower searchTerm'
           firstChar = head searchTerm
           baseURL = "https://rule34.paheal.net/tags?starts_with="
           url = baseURL ++ [firstChar] ++ "&mincount=1"
           
-findTags :: String -> Either IOException String -> Either String [String]
-findTags _ (Left _) = Left noInternet
-findTags searchTerm (Right page)
+findTags :: String -> String -> Either String [String]
+findTags searchTerm page
     | null tags = Left noTags
     | otherwise = Right tags
     where tags = fixBrokenTagsDownload . filter (searchTerm `isPrefixOf`) 

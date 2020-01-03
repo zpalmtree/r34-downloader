@@ -189,12 +189,11 @@ downloadMethod s this tag' folder' = do
             threadId <- forkIO $ do
                 disableUI s this
                 let url = addBaseAddress tag
-                firstpage <- try $ openURL url :: IO (Either IOException
-                                                             String)
+                firstpage <- openURL url
                 case firstpage of
-                    Left _ -> do
-                        infoM "Prog.downloadMethod" "Error: No Internet"
-                        writeMsg s this noInternet "Ok"
+                    Left err -> do
+                        infoM "Prog.downloadMethod" $ "Error downloading: " ++ show err
+                        writeMsg s this (show err) "Ok"
                         enableUI s this
                     Right val -> if noImagesExist val
                         then do
