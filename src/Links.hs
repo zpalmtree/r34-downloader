@@ -37,7 +37,7 @@ enumerate :: URL -> Int -> [URL]
 enumerate url num = map (\n -> init url ++ show n) [1..num]
 
 getLinks :: String -> [URL]
-getLinks soup = genericParser soup "href" "imagelist" "a"
+getLinks soup = genericParser soup "href" "image-list" "a"
 
 genericParser :: String -> String -> String -> String -> [URL]
 genericParser soup attrib sectionId openName = filter isHyperLink attribs
