@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ee652b16021442a4704dd9eefa7735f9e7445ff255e77f61d805c51429c8083f
+-- hash: 59d3e0513902c1a5d5a3360e6e794b0faecb6fd2d22357cfca9328320f4d4eee
 
 name:           rule34-paheal-downloader
-version:        0.1.1
+version:        0.1.2
 build-type:     Simple
 license:        GPL-3
 license-file:   LICENSE.md

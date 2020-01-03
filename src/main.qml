@@ -8,7 +8,7 @@ Window {
     property var uiIsEnabled: cancelDisabled
 
     // Remember to update me on each release!
-    title: "r34-downloader - v0.1.1"
+    title: "r34-downloader - v0.1.2"
     visible: true
 
     minimumHeight: 350
