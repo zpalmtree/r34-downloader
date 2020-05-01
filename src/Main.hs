@@ -150,7 +150,7 @@ searchMethod s this searchTerm = do
     writeMsg s this "Searching..." "Cancel"
 
     threadId <- forkIO $ do
-        results <- find . scrub $ unpack searchTerm
+        results <- find $ unpack searchTerm
         case results of
             Left err -> do
                 infoM "Prog.searchMethod" ("Error: " ++ show err)

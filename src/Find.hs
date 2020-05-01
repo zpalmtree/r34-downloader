@@ -11,8 +11,13 @@ import Data.Char (toLower)
 
 import Messages (noInternet, noTags)
 
-import Utilities 
-    (openURL, scrub, decodeURL, fixBrokenTagsSearch, fixBrokenTagsDownload)
+import Utilities (
+    openURL,
+    scrub,
+    decodeURL,
+    fixBrokenTagsSearch,
+    fixBrokenTagsDownload,
+    unescapeSpecialChars)
 
 -- &mincount=1 gets all tags instead of just popular ones
 find :: String -> IO (Either String [String])
@@ -30,7 +35,7 @@ findTags :: String -> String -> Either String [String]
 findTags searchTerm page
     | null tags = Left noTags
     | otherwise = Right tags
-    where tags = fixBrokenTagsDownload . filter (searchTerm `isPrefixOf`) 
+    where tags = map unescapeSpecialChars . fixBrokenTagsDownload . filter (searchTerm `isPrefixOf`) 
                     $ getTags page
 
 isolateTag :: String -> String -> Maybe String
