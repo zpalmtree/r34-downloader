@@ -3,3 +3,9 @@ r34MainCMD
 *.stack-work
 *.swp
 /src/dist
+build/HarvestedFiles.wixobj
+build/HarvestedFiles.wxs
+build/InstallationFiles/
+build/R34Downloader-installer.msi
+build/R34Downloader-installer.wixobj
+build/R34Downloader-installer.wixpdb
