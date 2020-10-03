@@ -1,57 +1,57 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 59d3e0513902c1a5d5a3360e6e794b0faecb6fd2d22357cfca9328320f4d4eee
 
 name:           rule34-paheal-downloader
 version:        0.1.3
-build-type:     Simple
-license:        GPL-3
-license-file:   LICENSE.md
-maintainer:     zpalmtree
 synopsis:       GUI downloader for rule34.paheal.net.
 category:       Web
 author:         zpalmtree
+maintainer:     zpalmtree
+license:        GPL-3
+license-file:   LICENSE.md
+build-type:     Simple
 extra-source-files:
     README.md
 data-files:
     src/main.qml
 
 flag localqml
-    description: Sources the qml file locally. Use this if you're compiling for the msi installer.
-    manual: False
-    default: False
+  description: Sources the qml file locally. Use this if you're compiling for the msi installer.
+  manual: False
+  default: False
 
 executable r34Downloader
-    main-is: Main.hs
-    build-depends:
-        HTTP,
-        async,
-        base >=4.8 && <4.10,
-        bytestring,
-        directory,
-        filepath,
-        hslogger,
-        hsqml,
-        http-conduit,
-        network-uri,
-        tagsoup,
-        text
-    if flag(localqml)
-        cpp-options: -DLOCALQML
-    if os(windows)
-        ghc-options: -optl-mwindows
-    other-modules:
-        Download
-        Find
-        Links
-        Messages
-        Utilities
-        Paths_rule34_paheal_downloader
-    default-language: Haskell2010
-    hs-source-dirs:
-        src
-    ghc-options: -threaded
+  main-is: Main.hs
+  other-modules:
+      Download
+      Find
+      Links
+      Messages
+      Utilities
+      Paths_rule34_paheal_downloader
+  hs-source-dirs:
+      src
+  ghc-options: -threaded
+  build-depends:
+      HTTP
+    , aeson
+    , async
+    , base >=4.8 && <4.10
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , hslogger
+    , hsqml
+    , http-conduit
+    , network-uri
+    , tagsoup
+    , text
+  if flag(localqml)
+    cpp-options: -DLOCALQML
+  if os(windows)
+    ghc-options: -optl-mwindows
+  default-language: Haskell2010

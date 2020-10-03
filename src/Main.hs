@@ -6,10 +6,10 @@ module Main
 )
 where
 
-import Graphics.QML (SignalKey, MarshalMode, IIsObjType, Yes, ICanPassTo, 
-                     Marshal, newSignalKey, newClass, defPropertySigRO', 
+import Graphics.QML (SignalKey, MarshalMode, IIsObjType, Yes, ICanPassTo,
+                     Marshal, newSignalKey, newClass, defPropertySigRO',
                      defMethod', newObject, runEngineLoop, defaultEngineConfig,
-                     fileDocument, anyObjRef, fireSignal, initialDocument, 
+                     fileDocument, anyObjRef, fireSignal, initialDocument,
                      contextObject)
 
 import Control.Concurrent (ThreadId, MVar, forkIO, killThread, newEmptyMVar,
@@ -30,7 +30,7 @@ import System.Environment (getArgs)
 
 import Find (find)
 import Messages (permissionError, noInternet, noImages)
-import Utilities (addBaseAddress, noImagesExist, openURL, scrub)
+import Utilities (addBaseAddress, noImagesExist, openURL)
 import Links (getImageLinks)
 import Download (download)
 
@@ -92,22 +92,22 @@ main = do
 
     thread <- newEmptyMVar
 
-    let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig 
-                           uiEnabledSig progressSig cancelDisabledSig searchS 
-                           mbTextS mbVisibleS mbButtonsS uiEnabledS progressS 
+    let s = StatesNSignals searchSig mbTextSig mbVisibleSig mbButtonsSig
+                           uiEnabledSig progressSig cancelDisabledSig searchS
+                           mbTextS mbVisibleS mbButtonsS uiEnabledS progressS
                            cancelDisabledS thread
-    
+
     rootClass <- newClass [
-        defPropertySigRO' "searchResults" (searchSignal s) 
+        defPropertySigRO' "searchResults" (searchSignal s)
                         $ defRead (searchState s),
 
-        defPropertySigRO' "msgText" (mbTextSignal s) 
+        defPropertySigRO' "msgText" (mbTextSignal s)
                         $ defRead (mbTextState s),
 
-        defPropertySigRO' "msgVisible" (mbVisibleSignal s) 
+        defPropertySigRO' "msgVisible" (mbVisibleSignal s)
                         $ defRead (mbVisibleState s),
 
-        defPropertySigRO' "msgButtons" (mbButtonsSignal s) 
+        defPropertySigRO' "msgButtons" (mbButtonsSignal s)
                         $ defRead (mbButtonsState s),
 
         defPropertySigRO' "uiEnabled" (uiEnabledSignal s)
@@ -122,9 +122,9 @@ main = do
         defMethod' "search" (searchMethod s),
 
         defMethod' "download" (downloadMethod s),
-        
+
         defMethod' "cancel" (cancelMethod s),
-        
+
         defMethod' "markAsHidden" (markAsHiddenMethod s)]
 
     ctx <- newObject rootClass ()
@@ -136,13 +136,13 @@ main = do
 
     where defRead s _ = readIORef s
 
-guiLogger :: (MarshalMode tt IIsObjType () ~ Yes, 
-              MarshalMode tt ICanPassTo () ~ Yes, 
+guiLogger :: (MarshalMode tt IIsObjType () ~ Yes,
+              MarshalMode tt ICanPassTo () ~ Yes,
               Marshal tt) => StatesNSignals -> tt -> String -> IO ()
 guiLogger s this msg = writeMsg s this msg "Cancel"
 
-searchMethod :: (MarshalMode tt IIsObjType () ~ Yes, 
-                 MarshalMode tt ICanPassTo () ~ Yes, 
+searchMethod :: (MarshalMode tt IIsObjType () ~ Yes,
+                 MarshalMode tt ICanPassTo () ~ Yes,
                  Marshal tt) => StatesNSignals -> tt -> Text -> IO ()
 searchMethod s this searchTerm = do
     disableUI s this
@@ -168,13 +168,13 @@ searchMethod s this searchTerm = do
         then putMVar (threadMVar s) threadId
         else void $ swapMVar (threadMVar s) threadId
 
-downloadMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
-                   MarshalMode tt IIsObjType () ~ Yes, 
-                   Marshal tt) => StatesNSignals -> tt -> 
+downloadMethod :: (MarshalMode tt ICanPassTo () ~ Yes,
+                   MarshalMode tt IIsObjType () ~ Yes,
+                   Marshal tt) => StatesNSignals -> tt ->
                    Text -> Text -> IO ()
 downloadMethod s this tag' folder' = do
     let tag = unpack tag'
-        Just folder = fmap (normalise . (++ "/")) . stripPrefix "file://" 
+        Just folder = fmap (normalise . (++ "/")) . stripPrefix "file://"
                         $ unpack folder'
 
     permissions <- getPermissions folder
@@ -216,8 +216,8 @@ downloadMethod s this tag' folder' = do
                 then putMVar (threadMVar s) threadId
                 else void $ swapMVar (threadMVar s) threadId
 
-writeMsg :: (MarshalMode tt IIsObjType () ~ Yes, 
-             MarshalMode tt ICanPassTo () ~ Yes, 
+writeMsg :: (MarshalMode tt IIsObjType () ~ Yes,
+             MarshalMode tt ICanPassTo () ~ Yes,
              Marshal tt) => StatesNSignals -> tt -> String -> String -> IO ()
 writeMsg s this msg buttonType = do
     hideMsg s this
@@ -230,8 +230,8 @@ writeMsg s this msg buttonType = do
     fireSignal (mbButtonsSignal s) this
     fireSignal (mbVisibleSignal s) this
 
-hideMsg :: (MarshalMode tt IIsObjType () ~ Yes, 
-            MarshalMode tt ICanPassTo () ~ Yes, 
+hideMsg :: (MarshalMode tt IIsObjType () ~ Yes,
+            MarshalMode tt ICanPassTo () ~ Yes,
             Marshal tt) => StatesNSignals -> tt -> IO ()
 hideMsg s this = do
     windowEnabled <- readIORef (mbVisibleState s)
@@ -241,8 +241,8 @@ hideMsg s this = do
         --window doesn't reappear unless we threadDelay a bit
         threadDelay 1000
 
-cancelMethod :: (MarshalMode tt ICanPassTo () ~ Yes, 
-                 MarshalMode tt IIsObjType () ~ Yes, 
+cancelMethod :: (MarshalMode tt ICanPassTo () ~ Yes,
+                 MarshalMode tt IIsObjType () ~ Yes,
                  Marshal tt) => StatesNSignals -> tt -> IO ()
 cancelMethod s this = do
     maybeMVar <- tryTakeMVar (threadMVar s)
@@ -258,8 +258,8 @@ cancelMethod s this = do
             disableCancel s this
             enableUI s this
 
-enableCancel :: (MarshalMode tt ICanPassTo () ~ Yes, 
-                 MarshalMode tt IIsObjType () ~ Yes, 
+enableCancel :: (MarshalMode tt ICanPassTo () ~ Yes,
+                 MarshalMode tt IIsObjType () ~ Yes,
                  Marshal tt) => StatesNSignals -> tt -> IO ()
 enableCancel s this = do
     cancelDisabled <- readIORef (cancelDisabledState s)
@@ -267,8 +267,8 @@ enableCancel s this = do
         writeIORef (cancelDisabledState s) False
         fireSignal (cancelDisabledSignal s) this
 
-disableCancel :: (MarshalMode tt ICanPassTo () ~ Yes, 
-                 MarshalMode tt IIsObjType () ~ Yes, 
+disableCancel :: (MarshalMode tt ICanPassTo () ~ Yes,
+                 MarshalMode tt IIsObjType () ~ Yes,
                  Marshal tt) => StatesNSignals -> tt -> IO ()
 disableCancel s this = do
     cancelDisabled <- readIORef (cancelDisabledState s)
@@ -276,8 +276,8 @@ disableCancel s this = do
         writeIORef (cancelDisabledState s) True
         fireSignal (cancelDisabledSignal s) this
 
-disableUI :: (MarshalMode tt ICanPassTo () ~ Yes, 
-              MarshalMode tt IIsObjType () ~ Yes, 
+disableUI :: (MarshalMode tt ICanPassTo () ~ Yes,
+              MarshalMode tt IIsObjType () ~ Yes,
               Marshal tt) => StatesNSignals -> tt -> IO ()
 disableUI s this = do
     uiEnabled <- readIORef (uiEnabledState s)
@@ -285,8 +285,8 @@ disableUI s this = do
         writeIORef (uiEnabledState s) False
         fireSignal (uiEnabledSignal s) this
 
-enableUI :: (MarshalMode tt ICanPassTo () ~ Yes, 
-             MarshalMode tt IIsObjType () ~ Yes, 
+enableUI :: (MarshalMode tt ICanPassTo () ~ Yes,
+             MarshalMode tt IIsObjType () ~ Yes,
              Marshal tt) => StatesNSignals -> tt -> IO ()
 enableUI s this = do
     uiEnabled <- readIORef (uiEnabledState s)

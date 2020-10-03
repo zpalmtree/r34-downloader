@@ -20,6 +20,8 @@ dependencies:
 - hslogger
 - async
 - http-conduit
+- aeson
+- containers
 executables:
   r34Downloader:
     main: Main.hs

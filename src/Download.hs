@@ -4,7 +4,7 @@ module Download
 )
 where
 
-import Network.URI (parseURI)
+import Network.URI (parseURI, unEscapeString)
 import Network.HTTP.Conduit (simpleHttp)
 import Data.List (genericLength)
 import Control.Exception (SomeException, try)
@@ -14,7 +14,7 @@ import qualified Data.ByteString as B (writeFile)
 import Data.ByteString.Lazy (toStrict)
 import System.FilePath (makeValid)
 
-import Utilities (URL, encodeURL, decodeURL, maxErrorsAllowed)
+import Utilities (URL, maxErrorsAllowed)
 import Messages (maxErrors, downloadFail)
 
 download :: FilePath -> [URL] -> (Double -> IO a) -> IO ()
@@ -25,8 +25,8 @@ download dir links' progressBar = download' links' 1 0
             -- need to use try instead of catch, because catch spawns a new
             -- thread, which stops the cancel button from working, because it
             -- cancels the sub-thread spawned.
-            
-            asyncThread <- async (try $ downloadImage dir link) 
+
+            asyncThread <- async (try $ downloadImage dir link)
                         :: IO (Async (Either SomeException ()))
             result <- wait asyncThread
 
@@ -43,12 +43,12 @@ download dir links' progressBar = download' links' 1 0
 --edited from http://stackoverflow.com/a/11514868
 downloadImage :: FilePath -> URL -> IO ()
 downloadImage dir url = case parseURI url of
-    Nothing -> infoM "Prog.downloadImage" 
+    Nothing -> infoM "Prog.downloadImage"
                    $ "Error: Couldn't parse URL - " ++ url
 
     Just uri -> B.writeFile filename =<< (toStrict <$> simpleHttp url)
 
-    where filename = makeValid $ decodeURL $ name dir url
+    where filename = makeValid $ unEscapeString $ name dir url
 
 --truncated to 255 chars so it doesn't overflow max file name size
 name :: FilePath -> URL -> FilePath
