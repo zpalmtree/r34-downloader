@@ -1,0 +1,26 @@
+name: Build Windows .exe
+
+on:
+  push:
+  pull_request:
+  release:
+    types: [published]
+
+jobs:
+  windows:
+    name: windows
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-haskell@v1.1
+      with:
+        enable-stack: true
+        stack-version: 'latest'
+
+    - name: Install Dependencies
+      run: stack install
+
+    - name: Build
+      run: stack build
