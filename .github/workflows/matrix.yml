@@ -17,7 +17,8 @@ jobs:
     - name: Install QT
       run: |
         curl -L https://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe > qt-unified-windows-x86-online.exe
-        qt-unified-windows-x86-online.exe install --root C:\QT\MyQt --accept-licenses --accept-obligations --default-answer --confirm-command
+        ls
+        qt-unified-windows-x86-online install --root C:\QT\MyQt --accept-licenses --accept-obligations --default-answer --confirm-command
 
     - uses: actions/setup-haskell@v1.1
       with:
