@@ -8,11 +8,16 @@ on:
 
 jobs:
   windows:
-    name: windows
+    name: Windows
     runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install QT
+      run: |
+        wget https://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe
+        qt-unified-windows-x86-online.exe install --root C:\QT\MyQt --accept-licenses --accept-obligations --default-answer --confirm-command
 
     - uses: actions/setup-haskell@v1.1
       with:
