@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?define ProductVersion = "0.1.3"?>
+<?define ProductVersion = "0.1.4"?>
 <?define ProductUpgradeCode = "03b5e0fb-2b0b-4800-861e-8858c14a6433"?>
 <?define Manufacturer = "zpalmtree"?>
 <?define AppName = "r34-downloader"?>
