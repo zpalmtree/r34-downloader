@@ -1,4 +1,9 @@
 # r34-downloader
+
+### UPDATE: No longer working due to changes on site. Unfortunately, I do not have time to update this to work again.
+
+
+
 A program to download all the images of a given tag from https://rule34.paheal.net [Warning - Not Safe For Work]
 
 The website has a one request a second limit, thus users with fast internet connections won't max out their bandwidth.
